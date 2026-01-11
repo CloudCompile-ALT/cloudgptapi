@@ -83,11 +83,11 @@ flowchart TD
 ```json
 {
   "error": {
-    "message": "The Liz proxy is temporarily rate limited. Please try again in 30 seconds or use a different model.",
+    "message": "The upstream provider is temporarily rate limited. Please try again in 30 seconds or use a different model.",
     "type": "provider_error",
     "code": "provider_rate_limit",
     "param": null,
-    "provider": "liz",
+    "provider": "poe",
     "request_id": "req_abc123",
     "retry_after": 30,
     "suggestion": "Try using 'openai' or 'claude' models from Pollinations provider instead.",
@@ -137,27 +137,27 @@ export const MODEL_ALIASES: Record<string, string> = {
   'gpt-3.5-turbo': 'openai-fast',
   'gpt-3.5-turbo-16k': 'openai-fast',
   
-  // Claude aliases - map to Pollinations or Liz
+  // Claude aliases - map to Pollinations or Poe
   'claude-3-5-sonnet': 'claude',
   'claude-3-5-sonnet-20240620': 'claude',
   'claude-3-sonnet': 'claude',
   'claude-3-haiku': 'claude-fast',
-  'claude-3-opus': 'claude-3-opus',  // Liz model
-  'claude-3.5-sonnet': 'claude-3.5-sonnet',  // Liz model
-  'claude-sonnet-4': 'claude-sonnet-4',  // Liz model
+  'claude-3-opus': 'claude-3-opus',  // Poe model
+  'claude-3.5-sonnet': 'claude-3.5-sonnet',  // Poe model
+  'claude-sonnet-4': 'claude-sonnet-4',  // Poe model
   
   // Gemini aliases
   'gemini-pro': 'gemini',
   'gemini-1.5-pro': 'gemini-large',
   'gemini-1.5-flash': 'gemini-fast',
   'gemini-2.0-flash': 'gemini',
-  'gemini-2.5-pro': 'gemini-2.5-pro',  // Liz model
+  'gemini-2.5-pro': 'gemini-2.5-pro',  // Poe model
   
   // DeepSeek aliases
   'deepseek-chat': 'deepseek',
   'deepseek-coder': 'qwen-coder',
-  'deepseek-v3': 'deepseek-v3',  // Liz model
-  'deepseek-r1': 'deepseek-r1',  // Liz model
+  'deepseek-v3': 'deepseek-v3',  // Poe model
+  'deepseek-r1': 'deepseek-r1',  // Poe model
   
   // Mistral aliases
   'mistral-large': 'mistral',
@@ -187,7 +187,7 @@ Add support for provider-prefixed model IDs:
 // Format: provider/model-name
 // Examples:
 // - pollinations/openai
-// - liz/claude-3.5-sonnet
+// - poe/claude-3.5-sonnet
 // - openrouter/meta-llama/llama-3.3-70b-instruct:free
 
 function resolveModelId(requestedModel: string): { modelId: string; provider?: string } {
@@ -197,7 +197,7 @@ function resolveModelId(requestedModel: string): { modelId: string; provider?: s
     const modelPart = rest.join('/');
     
     // Check if prefix is a known provider
-    if (['pollinations', 'liz', 'openrouter', 'stablehorde', 'meridian'].includes(prefix)) {
+    if (['pollinations', 'poe', 'openrouter', 'stablehorde', 'meridian'].includes(prefix)) {
       return { modelId: modelPart, provider: prefix };
     }
   }
@@ -276,7 +276,7 @@ For users of other AI providers:
 
 ### Tier 4: Provider-Prefixed
 For explicit provider selection:
-- `pollinations/openai`, `liz/claude-3.5-sonnet`, `openrouter/meta-llama/llama-3.3-70b-instruct:free`
+- `pollinations/openai`, `poe/claude-3.5-sonnet`, `openrouter/meta-llama/llama-3.3-70b-instruct:free`
 
 ---
 

@@ -19,7 +19,7 @@ import {
   Clock
 } from 'lucide-react';
 import { CHAT_MODELS, IMAGE_MODELS, VIDEO_MODELS, PREMIUM_MODELS } from '@/lib/providers';
-import { cn } from '@/lib/utils';
+import { cn, hasProAccess, hasVideoAccess } from '@/lib/utils';
 import { useUser } from '@clerk/nextjs';
 import Link from 'next/link';
 
@@ -112,10 +112,16 @@ export default function PlaygroundPage() {
 
     // Check if model is premium and user is not pro
     const isPremium = PREMIUM_MODELS.has(selectedModel);
-    const isPro = profile?.plan === 'pro' || profile?.plan === 'enterprise';
+    const isPro = hasProAccess(profile?.plan);
+    const canAccessVideo = hasVideoAccess(profile?.plan);
     
     if (isPremium && !isPro) {
       setError('This model is only available for Pro members. Please upgrade your plan to use it.');
+      return;
+    }
+
+    if (mode === 'video' && !canAccessVideo) {
+      setError('Video generation is only available for Video Pro and Enterprise members. Please upgrade your plan to use it.');
       return;
     }
 

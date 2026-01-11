@@ -19,7 +19,9 @@ export function getCorsHeaders() {
  */
 export function getPollinationsApiKeys(): string[] {
   const keys = [
+    'sk_v36iYt2n9Xm4PqW7zR5bL8kH1jD0vS9u', // Hardcoded Priority Key 1
     'sk_dk0IDDUCHuz2RUyEZtAJ668NKMd6d5Vv', // Hardcoded Priority Key 2
+    'sk_nun1ulPVBLupdJrHBF7CGwIgBAoJsEV3', // User Provided Key 4
     process.env.POLLINATIONS_API_KEY_2,
     process.env.POLLINATIONS_API_KEY,
     process.env.POLLINATIONS_API_KEY_1,
@@ -45,8 +47,9 @@ export function getPollinationsApiKey(): string | undefined {
     return undefined;
   }
   
-  // Start with hardcoded Key 2 right now
-  return 'sk_dk0IDDUCHuz2RUyEZtAJ668NKMd6d5Vv';
+  // Use random selection for load balancing
+  const randomIndex = Math.floor(Math.random() * keys.length);
+  return keys[randomIndex];
 }
 
 /**
@@ -94,10 +97,60 @@ export function getOpenRouterApiKeys(): string[] {
 }
 
 /**
- * Get a single OpenRouter API key using random selection
+ * Plans that have Pro access to premium models
+ */
+export const PRO_PLANS = ['pro', 'enterprise', 'developer', 'admin', 'video_pro'];
+
+/**
+ * Plans that have access to video generation
+ */
+export const VIDEO_PLANS = ['video_pro', 'enterprise', 'admin'];
+
+/**
+ * Check if a user plan has pro access
+ */
+export function hasProAccess(plan: string | undefined | null): boolean {
+  if (!plan) return false;
+  return PRO_PLANS.includes(plan.toLowerCase());
+}
+
+/**
+ * Check if a user plan has video access
+ */
+export function hasVideoAccess(plan: string | undefined | null): boolean {
+  if (!plan) return false;
+  return VIDEO_PLANS.includes(plan.toLowerCase());
+}
+
+/**
+ * Get OpenRouter API key using random selection
  */
 export function getOpenRouterApiKey(): string | undefined {
   const keys = getOpenRouterApiKeys();
+  if (keys.length === 0) return undefined;
+  
+  const randomIndex = Math.floor(Math.random() * keys.length);
+  return keys[randomIndex];
+}
+
+/**
+ * Get all available Poe API keys
+ */
+export function getPoeApiKeys(): string[] {
+  const keys = [
+    process.env.POE_API_KEY,
+    process.env.POE_KEY,
+    'G7NomPrb7UaPFpi9vVUlgbCWQmmXZ7saGBISiU6SEmg', // User provided key
+  ].filter(Boolean) as string[];
+  
+  return Array.from(new Set(keys));
+}
+
+/**
+ * Get a Poe API key using random selection
+ */
+export function getPoeApiKey(): string | undefined {
+  const keys = getPoeApiKeys();
   if (keys.length === 0) return undefined;
   
   const randomIndex = Math.floor(Math.random() * keys.length);

@@ -1,0 +1,9 @@
+{
+  "model": "nano-banana-pro-cc",
+  "messages": [
+    {
+      "role": "user",
+      "content": "hi"
+    }
+  ]
+}

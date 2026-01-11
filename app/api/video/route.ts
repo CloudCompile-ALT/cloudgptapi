@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { auth } from '@clerk/nextjs/server';
 import { extractApiKey, validateApiKey, trackUsage, checkRateLimit, getRateLimitInfo, checkDailyLimit, getDailyLimitInfo, ApiKey, applyPlanOverride, applyPeakHoursLimit } from '@/lib/api-keys';
 import { VIDEO_MODELS, PROVIDER_URLS, VideoModel, PREMIUM_MODELS } from '@/lib/providers';
-import { getPollinationsApiKey, safeResponseJson } from '@/lib/utils';
+import { getPollinationsApiKey, safeResponseJson, hasProAccess, hasVideoAccess } from '@/lib/utils';
 import { supabaseAdmin } from '@/lib/supabase';
 
 export const runtime = 'nodejs';
@@ -161,9 +161,9 @@ async function handleVideoGeneration(request: NextRequest, body: any) {
     }
 
     // Lock all video models behind video_pro, enterprise, or admin plans
-    const hasVideoAccess = ['video_pro', 'enterprise', 'admin'].includes(userPlan) || (apiKeyInfo?.rateLimit && apiKeyInfo.rateLimit >= 50);
+    const canAccessVideo = hasVideoAccess(userPlan) || (apiKeyInfo?.rateLimit && apiKeyInfo.rateLimit >= 50);
 
-    if (!hasVideoAccess) {
+    if (!canAccessVideo) {
       return NextResponse.json(
         { 
           error: {
@@ -199,10 +199,10 @@ async function handleVideoGeneration(request: NextRequest, body: any) {
 
     // Check if model is premium and if user has access
     const isPremium = PREMIUM_MODELS.has(modelId);
-    // Pro access if they have a pro/enterprise/developer/admin plan
-    const hasProAccess = ['pro', 'enterprise', 'developer', 'admin'].includes(userPlan);
+    // Pro access if they have a pro/enterprise/developer/admin/video_pro plan
+    const hasPro = hasProAccess(userPlan);
 
-    if (isPremium && !hasProAccess) {
+    if (isPremium && !hasPro) {
       return NextResponse.json(
         {
           error: {

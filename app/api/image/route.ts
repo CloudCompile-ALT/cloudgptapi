@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { auth } from '@clerk/nextjs/server';
 import { extractApiKey, validateApiKey, trackUsage, checkRateLimit, getRateLimitInfo, checkDailyLimit, getDailyLimitInfo, ApiKey, applyPlanOverride, applyPeakHoursLimit } from '@/lib/api-keys';
 import { IMAGE_MODELS, PROVIDER_URLS, ImageModel, PREMIUM_MODELS } from '@/lib/providers';
-import { getPollinationsApiKey, safeResponseJson, safeJsonParse } from '@/lib/utils';
+import { getPollinationsApiKey, safeResponseJson, safeJsonParse, hasProAccess } from '@/lib/utils';
 import { supabaseAdmin } from '@/lib/supabase';
 
 export const runtime = 'nodejs';
@@ -449,9 +449,9 @@ export async function POST(request: NextRequest) {
     // Check if model is premium and if user has access
     const isPremium = PREMIUM_MODELS.has(modelId);
     // Pro access if they have a pro/enterprise/developer/admin plan
-    const hasProAccess = ['pro', 'enterprise', 'developer', 'admin'].includes(userPlan);
+    const hasPro = hasProAccess(userPlan);
 
-    if (isPremium && !hasProAccess) {
+    if (isPremium && !hasPro) {
       return NextResponse.json(
         {
           error: {

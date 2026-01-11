@@ -82,7 +82,7 @@ export default function Home() {
                       <div className="space-y-2 flex-1">
                         <div className="h-4 w-32 bg-white/10 rounded-full" />
                         <div className="h-20 bg-white/5 rounded-2xl p-4 font-mono text-xs text-white/40 leading-relaxed">
-                          $ curl https://api.cloudgpt.com/v1/chat \<br />
+                          $ curl https://api.cloudgpt.com/v1/chat/completions \<br />
                           &nbsp;&nbsp;-H "Authorization: Bearer $KEY" \<br />
                           &nbsp;&nbsp;-d '{"{"}"model": "gpt-5-mini"{"}"}'
                         </div>

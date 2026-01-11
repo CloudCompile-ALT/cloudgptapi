@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react';
 import { useUser } from '@clerk/nextjs';
 import { Crown, Shield, Zap, ArrowUpCircle } from 'lucide-react';
-import { cn } from '@/lib/utils';
+import { cn, hasProAccess } from '@/lib/utils';
 import Link from 'next/link';
 
 export function UserStatus() {
@@ -24,9 +24,9 @@ export function UserStatus() {
   }, [isLoaded, user]);
 
   if (!isLoaded || !user || !profile) return null;
-
-  const isPro = profile.plan === 'pro' || profile.plan === 'enterprise';
-  const isAdmin = profile.role === 'admin';
+  
+  const isPro = hasProAccess(profile.plan);
+  const isAdmin = profile.role === 'admin' || profile.plan === 'admin';
 
   return (
     <div className="flex items-center gap-3 mr-2">

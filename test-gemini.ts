@@ -32,7 +32,6 @@ async function runTests() {
   // Test models from different providers
   await testModel('gemini-fast', apiKey); // provider: gemini (pollinations)
   await testModel('gemini', apiKey);      // provider: gemini (pollinations)
-  await testModel('gemini-2.5-pro', apiKey); // provider: liz
   await testModel('openai', apiKey);      // provider: pollinations
 }
 

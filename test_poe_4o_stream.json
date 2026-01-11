@@ -1,0 +1,10 @@
+{
+  "model": "GPT-4o",
+  "messages": [
+    {
+      "role": "user",
+      "content": "hi"
+    }
+  ],
+  "stream": true
+}

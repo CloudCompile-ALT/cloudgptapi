@@ -3,7 +3,7 @@
 export interface ChatModel {
   id: string;
   name: string;
-  provider: 'pollinations' | 'openrouter' | 'stablehorde' | 'meridian' | 'liz' | 'github' | 'claude' | 'gemini';
+  provider: 'pollinations' | 'openrouter' | 'stablehorde' | 'meridian' | 'github' | 'claude' | 'gemini' | 'poe';
   description?: string;
   contextWindow?: number;
   downtimeUntil?: string; // ISO timestamp for maintenance countdown
@@ -29,27 +29,24 @@ export interface VideoModel {
   usageWeight?: number; // How many "requests" this model counts as for daily limits
 }
 
-// Calculate downtime timestamp (until 2PM EST)
-const POLLINATIONS_DOWNTIME = '2026-01-09T00:00:00Z';
-
 // Available chat models by provider
 const POLLINATIONS_CHAT_MODELS: ChatModel[] = [
-  { id: 'nova-fast', name: 'Amazon Nova Micro', provider: 'pollinations', description: 'Amazon Nova Micro', downtimeUntil: POLLINATIONS_DOWNTIME },
-  { id: 'qwen-coder', name: 'Qwen3 Coder 30B', provider: 'pollinations', description: 'Qwen3 Coder 30B', downtimeUntil: POLLINATIONS_DOWNTIME },
-  { id: 'mistral', name: 'Mistral Small 3.2 24B', provider: 'pollinations', description: 'Mistral Small 3.2 24B', downtimeUntil: POLLINATIONS_DOWNTIME },
-  { id: 'openai-fast', name: 'OpenAI GPT-5 Nano', provider: 'pollinations', description: 'OpenAI GPT-5 Nano', downtimeUntil: POLLINATIONS_DOWNTIME },
-  { id: 'grok', name: 'xAI Grok 4 Fast', provider: 'pollinations', description: 'xAI Grok 4 Fast', downtimeUntil: POLLINATIONS_DOWNTIME },
-  { id: 'openai', name: 'OpenAI GPT-5 Mini', provider: 'pollinations', description: 'OpenAI GPT-5 Mini', downtimeUntil: POLLINATIONS_DOWNTIME },
-  { id: 'perplexity-fast', name: 'Perplexity Sonar', provider: 'pollinations', description: 'Perplexity Sonar', downtimeUntil: POLLINATIONS_DOWNTIME },
-  { id: 'chickytutor', name: 'ChickyTutor AI Language Tutor', provider: 'pollinations', description: 'ChickyTutor AI Language Tutor', downtimeUntil: POLLINATIONS_DOWNTIME },
-  { id: 'minimax', name: 'MiniMax M2.1', provider: 'pollinations', description: 'MiniMax M2.1', downtimeUntil: POLLINATIONS_DOWNTIME },
-  { id: 'deepseek', name: 'DeepSeek V3.2', provider: 'pollinations', description: 'DeepSeek V3.2', downtimeUntil: POLLINATIONS_DOWNTIME },
-  { id: 'glm', name: 'Z.ai GLM-4.7', provider: 'pollinations', description: 'Z.ai GLM-4.7', downtimeUntil: POLLINATIONS_DOWNTIME },
-  { id: 'kimi-k2-thinking', name: 'Moonshot Kimi K2 Thinking', provider: 'pollinations', description: 'Moonshot Kimi K2 Thinking', downtimeUntil: POLLINATIONS_DOWNTIME },
-  { id: 'midijourney', name: 'MIDIjourney', provider: 'pollinations', description: 'MIDIjourney', downtimeUntil: POLLINATIONS_DOWNTIME },
-  { id: 'perplexity-reasoning', name: 'Perplexity Sonar Reasoning', provider: 'pollinations', description: 'Perplexity Sonar Reasoning', downtimeUntil: POLLINATIONS_DOWNTIME },
-  { id: 'openai-large', name: 'OpenAI GPT-5.2', provider: 'pollinations', description: 'OpenAI GPT-5.2', downtimeUntil: POLLINATIONS_DOWNTIME },
-  { id: 'openai-audio', name: 'OpenAI GPT-4o Mini Audio', provider: 'pollinations', description: 'OpenAI GPT-4o Mini Audio', downtimeUntil: POLLINATIONS_DOWNTIME },
+  { id: 'nova-fast', name: 'Amazon Nova Micro', provider: 'pollinations', description: 'Amazon Nova Micro' },
+  { id: 'qwen-coder', name: 'Qwen3 Coder 30B', provider: 'pollinations', description: 'Qwen3 Coder 30B' },
+  { id: 'mistral', name: 'Mistral Small 3.2 24B', provider: 'pollinations', description: 'Mistral Small 3.2 24B' },
+  { id: 'openai-fast', name: 'OpenAI GPT-5 Nano', provider: 'pollinations', description: 'OpenAI GPT-5 Nano' },
+  { id: 'grok', name: 'xAI Grok 4 Fast', provider: 'pollinations', description: 'xAI Grok 4 Fast' },
+  { id: 'openai', name: 'OpenAI GPT-5 Mini', provider: 'pollinations', description: 'OpenAI GPT-5 Mini' },
+  { id: 'perplexity-fast', name: 'Perplexity Sonar', provider: 'pollinations', description: 'Perplexity Sonar' },
+  { id: 'chickytutor', name: 'ChickyTutor AI Language Tutor', provider: 'pollinations', description: 'ChickyTutor AI Language Tutor' },
+  { id: 'minimax', name: 'MiniMax M2.1', provider: 'pollinations', description: 'MiniMax M2.1' },
+  { id: 'deepseek', name: 'DeepSeek V3.2', provider: 'pollinations', description: 'DeepSeek V3.2' },
+  { id: 'glm', name: 'Z.ai GLM-4.7', provider: 'pollinations', description: 'Z.ai GLM-4.7' },
+  { id: 'kimi-k2-thinking', name: 'Moonshot Kimi K2 Thinking', provider: 'pollinations', description: 'Moonshot Kimi K2 Thinking' },
+  { id: 'midijourney', name: 'MIDIjourney', provider: 'pollinations', description: 'MIDIjourney' },
+  { id: 'perplexity-reasoning', name: 'Perplexity Sonar Reasoning', provider: 'pollinations', description: 'Perplexity Sonar Reasoning' },
+  { id: 'openai-large', name: 'OpenAI GPT-5.2', provider: 'pollinations', description: 'OpenAI GPT-5.2' },
+  { id: 'openai-audio', name: 'OpenAI GPT-4o Mini Audio', provider: 'pollinations', description: 'OpenAI GPT-4o Mini Audio' },
 ];
 
 const GEMINI_CHAT_MODELS: ChatModel[] = [
@@ -60,9 +57,9 @@ const GEMINI_CHAT_MODELS: ChatModel[] = [
 ];
 
 const CLAUDE_CHAT_MODELS: ChatModel[] = [
-  { id: 'claude-fast', name: 'Anthropic Claude Haiku 4.5', provider: 'claude', description: 'Anthropic Claude Haiku 4.5', downtimeUntil: '2099-01-01T00:00:00Z' },
-  { id: 'claude', name: 'Anthropic Claude Sonnet 4.5', provider: 'claude', description: 'Anthropic Claude Sonnet 4.5', downtimeUntil: '2099-01-01T00:00:00Z' },
-  { id: 'claude-large', name: 'Anthropic Claude Opus 4.5', provider: 'claude', description: 'Anthropic Claude Opus 4.5', downtimeUntil: '2099-01-01T00:00:00Z' },
+  { id: 'claude-fast', name: 'Anthropic Claude Haiku 4.5', provider: 'claude', description: 'Anthropic Claude Haiku 4.5' },
+  { id: 'claude', name: 'Anthropic Claude Sonnet 4.5', provider: 'claude', description: 'Anthropic Claude Sonnet 4.5' },
+  { id: 'claude-large', name: 'Anthropic Claude Opus 4.5', provider: 'claude', description: 'Anthropic Claude Opus 4.5' },
 ];
 
 const OPENROUTER_CHAT_MODELS: ChatModel[] = [
@@ -115,33 +112,7 @@ const MERIDIAN_CHAT_MODELS: ChatModel[] = [
   { id: 'meridian', name: 'Meridian', provider: 'meridian', description: 'Meridian cognitive substrate with persistent memory' },
 ];
 
-const LIZ_CHAT_MODELS: ChatModel[] = [
-  // Liz Proxy models (Non-Claude only as requested)
-  { id: 'gemini-2.0-flash-001', name: 'Gemini 2.0 Flash 001', provider: 'liz', description: 'Google Gemini 2.0 Flash 001', downtimeUntil: '2099-01-01T00:00:00Z' },
-  { id: 'gemini-3-flash-preview', name: 'Gemini 3 Flash Preview', provider: 'liz', description: 'Google Gemini 3 Flash Preview', downtimeUntil: '2099-01-01T00:00:00Z' },
-  { id: 'gemini-2.0-flash-lite-001', name: 'Gemini 2.0 Flash Lite 001', provider: 'liz', description: 'Google Gemini 2.0 Flash Lite 001', downtimeUntil: '2099-01-01T00:00:00Z' },
-  { id: 'gemini-2.5-flash', name: 'Gemini 2.5 Flash', provider: 'liz', description: 'Google Gemini 2.5 Flash', downtimeUntil: '2099-01-01T00:00:00Z' },
-  { id: 'gemini-2.5-flash-image', name: 'Gemini 2.5 Flash Image', provider: 'liz', description: 'Google Gemini 2.5 Flash Image', downtimeUntil: '2099-01-01T00:00:00Z' },
-  { id: 'gemini-2.5-flash-lite', name: 'Gemini 2.5 Flash Lite', provider: 'liz', description: 'Google Gemini 2.5 Flash Lite', downtimeUntil: '2099-01-01T00:00:00Z' },
-  { id: 'gemini-2.5-pro', name: 'Gemini 2.5 Pro', provider: 'liz', description: 'Google Gemini 2.5 Pro' },
-  { id: 'gemini-3-pro-image-preview', name: 'Gemini 3 Pro Image Preview', provider: 'liz', description: 'Google Gemini 3 Pro Image Preview', downtimeUntil: '2099-01-01T00:00:00Z' },
-  { id: 'gemini-3-pro-preview', name: 'Gemini 3 Pro Preview', provider: 'liz', description: 'Google Gemini 3 Pro Preview', downtimeUntil: '2099-01-01T00:00:00Z' },
-  { id: 'deepseek-prover-v2', name: 'DeepSeek Prover V2', provider: 'liz', description: 'DeepSeek Prover V2' },
-  { id: 'deepseek-r1', name: 'DeepSeek R1', provider: 'liz', description: 'DeepSeek R1' },
-  { id: 'deepseek-v3', name: 'DeepSeek V3', provider: 'liz', description: 'DeepSeek V3' },
-  { id: 'deepseek-r1-0528', name: 'DeepSeek R1 0528', provider: 'liz', description: 'DeepSeek R1 0528' },
-  { id: 'deepseek-v3.1', name: 'DeepSeek V3.1', provider: 'liz', description: 'DeepSeek V3.1' },
-  { id: 'deepseek-v3.2-exp', name: 'DeepSeek V3.2 Exp', provider: 'liz', description: 'DeepSeek V3.2 Experimental' },
-  { id: 'deepseek-v3.2', name: 'DeepSeek V3.2', provider: 'liz', description: 'DeepSeek V3.2' },
-  { id: 'deepseek-v3.1-nex-n1:free', name: 'DeepSeek V3.1 Nex N1', provider: 'liz', description: 'DeepSeek V3.1 Nex N1 Free' },
-  { id: 'glm-4.5-air:free', name: 'GLM 4.5 Air Free', provider: 'liz', description: 'GLM 4.5 Air Free' },
-  { id: 'glm-4-32b', name: 'GLM 4 32B', provider: 'liz', description: 'GLM 4 32B' },
-  { id: 'glm-4.5', name: 'GLM 4.5', provider: 'liz', description: 'GLM 4.5' },
-  { id: 'glm-4.5-air', name: 'GLM 4.5 Air', provider: 'liz', description: 'GLM 4.5 Air' },
-  { id: 'glm-4.5v', name: 'GLM 4.5V', provider: 'liz', description: 'GLM 4.5 Vision' },
-  { id: 'glm-4.6', name: 'GLM 4.6', provider: 'liz', description: 'GLM 4.6' },
-  { id: 'glm-4.7', name: 'GLM 4.7', provider: 'liz', description: 'GLM 4.7' },
-];
+
 
 const GITHUB_CHAT_MODELS: ChatModel[] = [
   // GitHub Models
@@ -186,6 +157,39 @@ const GITHUB_CHAT_MODELS: ChatModel[] = [
   { id: 'DeepSeek-V3-0324', name: 'DeepSeek-V3-0324', provider: 'github', usageWeight: 10 },
 ];
 
+const POE_CHAT_MODELS: ChatModel[] = [
+  // Anthropic
+  { id: 'claude-sonnet-3.5', name: 'Claude 3.5 Sonnet', provider: 'poe', usageWeight: 10 },
+  { id: 'claude-haiku-3.5', name: 'Claude 3.5 Haiku', provider: 'poe', usageWeight: 2 },
+  { id: 'claude-opus-4', name: 'Claude 3 Opus', provider: 'poe', usageWeight: 25 },
+  { id: 'claude-haiku-3', name: 'Claude 3 Haiku', provider: 'poe', usageWeight: 1 },
+  
+  // OpenAI
+  { id: 'gpt-4o', name: 'GPT-4o', provider: 'poe', usageWeight: 10 },
+  { id: 'gpt-4o-mini', name: 'GPT-4o mini', provider: 'poe', usageWeight: 1 },
+  { id: 'o1', name: 'o1', provider: 'poe', usageWeight: 30 },
+  { id: 'o1-mini', name: 'o1-mini', provider: 'poe', usageWeight: 15 },
+  { id: 'o1-pro', name: 'o1-preview', provider: 'poe', usageWeight: 25 },
+  
+  // Google
+  { id: 'gemini-2.5-pro', name: 'Gemini 1.5 Pro', provider: 'poe', usageWeight: 15 },
+  { id: 'gemini-2.5-flash', name: 'Gemini 1.5 Flash', provider: 'poe', usageWeight: 2 },
+  { id: 'gemini-2.0-flash', name: 'Gemini 2.0 Flash', provider: 'poe', usageWeight: 5 },
+  
+  // Meta
+  { id: 'llama-3.1-405b-fp16', name: 'Llama 3.1 405B', provider: 'poe', usageWeight: 20 },
+  { id: 'llama-3.1-70b-fp16', name: 'Llama 3.1 70B', provider: 'poe', usageWeight: 5 },
+  { id: 'llama-3.3-70b', name: 'Llama 3.3 70B', provider: 'poe', usageWeight: 8 },
+  
+  // Others
+  { id: 'deepseek-v3', name: 'DeepSeek V3', provider: 'poe', usageWeight: 10 },
+  { id: 'deepseek-r1', name: 'DeepSeek R1', provider: 'poe', usageWeight: 25 },
+  { id: 'qwen-2.5-72b-t', name: 'Qwen 2.5 72B', provider: 'poe', usageWeight: 8 },
+  { id: 'mistral-large-2', name: 'Mistral Large 2', provider: 'poe', usageWeight: 12 },
+  { id: 'grok-4-fast-non-reasoning', name: 'Grok 2', provider: 'poe', usageWeight: 15 },
+  { id: 'Web-Search', name: 'Web Search', provider: 'poe', usageWeight: 5 },
+];
+
 export const CHAT_MODELS: ChatModel[] = [
   ...POLLINATIONS_CHAT_MODELS,
   ...GEMINI_CHAT_MODELS,
@@ -193,8 +197,8 @@ export const CHAT_MODELS: ChatModel[] = [
   ...OPENROUTER_CHAT_MODELS,
   ...STABLEHORDE_CHAT_MODELS,
   ...MERIDIAN_CHAT_MODELS,
-  ...LIZ_CHAT_MODELS,
   ...GITHUB_CHAT_MODELS,
+  ...POE_CHAT_MODELS,
 ];
 
 // Premium models that require a subscription
@@ -249,6 +253,23 @@ export const PREMIUM_MODELS = new Set([
   'HunyuanImage-3.0',
   'Qwen-Image',
   
+  // Poe Premium Models
+  'claude-sonnet-3.5',
+  'claude-haiku-3.5',
+  'claude-opus-4',
+  'gpt-4o',
+  'o1',
+  'o1-mini',
+  'o1-pro',
+  'gemini-2.5-pro',
+  'gemini-2.0-flash',
+  'llama-3.1-405b-fp16',
+  'llama-3.3-70b',
+  'deepseek-v3',
+  'deepseek-r1',
+  'mistral-large-2',
+  'grok-4-fast-non-reasoning',
+  
   // Video (All)
   'veo',
   'seedance',
@@ -262,16 +283,16 @@ export const PREMIUM_MODELS = new Set([
 
 // Available image models
 export const IMAGE_MODELS: ImageModel[] = [
-  { id: 'flux', name: 'Flux', provider: 'pollinations', description: 'Flux Schnell - Fast high-quality image generation', downtimeUntil: POLLINATIONS_DOWNTIME, usageWeight: 5 },
-  { id: 'zimage', name: 'Z-Image', provider: 'pollinations', description: 'Z-Image Turbo - Fast 6B Flux with 2x upscaling', downtimeUntil: POLLINATIONS_DOWNTIME, usageWeight: 5 },
-  { id: 'turbo', name: 'Turbo', provider: 'pollinations', description: 'SDXL Turbo - Single-step real-time generation', downtimeUntil: POLLINATIONS_DOWNTIME, usageWeight: 5 },
-  { id: 'gptimage', name: 'GPT Image', provider: 'pollinations', description: "GPT Image 1 Mini - OpenAI's image generation model", downtimeUntil: POLLINATIONS_DOWNTIME, usageWeight: 5 },
-  { id: 'gptimage-large', name: 'GPT Image Large', provider: 'pollinations', description: "GPT Image 1.5 - OpenAI's advanced image generation model", downtimeUntil: POLLINATIONS_DOWNTIME, usageWeight: 15 },
-  { id: 'seedream', name: 'Seedream', provider: 'pollinations', description: 'Seedream 4.0 - ByteDance ARK (better quality)', downtimeUntil: POLLINATIONS_DOWNTIME, usageWeight: 5 },
-  { id: 'kontext', name: 'Kontext', provider: 'pollinations', description: 'FLUX.1 Kontext - In-context editing & generation', downtimeUntil: POLLINATIONS_DOWNTIME, usageWeight: 5 },
-  { id: 'nanobanana', name: 'Nanobanana', provider: 'pollinations', description: 'NanoBanana - Gemini 2.5 Flash Image', downtimeUntil: POLLINATIONS_DOWNTIME, usageWeight: 5 },
-  { id: 'seedream-pro', name: 'Seedream Pro', provider: 'pollinations', description: 'Seedream 4.5 Pro - ByteDance ARK (4K, Multi-Image)', downtimeUntil: POLLINATIONS_DOWNTIME, usageWeight: 15 },
-  { id: 'nanobanana-pro', name: 'Nanobanana Pro', provider: 'pollinations', description: 'NanoBanana Pro - Gemini 3 Pro Image (4K, Thinking)', downtimeUntil: POLLINATIONS_DOWNTIME, usageWeight: 15 },
+  { id: 'flux', name: 'Flux', provider: 'pollinations', description: 'Flux Schnell - Fast high-quality image generation', usageWeight: 5 },
+  { id: 'zimage', name: 'Z-Image', provider: 'pollinations', description: 'Z-Image Turbo - Fast 6B Flux with 2x upscaling', usageWeight: 5 },
+  { id: 'turbo', name: 'Turbo', provider: 'pollinations', description: 'SDXL Turbo - Single-step real-time generation', usageWeight: 5 },
+  { id: 'gptimage', name: 'GPT Image', provider: 'pollinations', description: "GPT Image 1 Mini - OpenAI's image generation model", usageWeight: 5 },
+  { id: 'gptimage-large', name: 'GPT Image Large', provider: 'pollinations', description: "GPT Image 1.5 - OpenAI's advanced image generation model", usageWeight: 15 },
+  { id: 'seedream', name: 'Seedream', provider: 'pollinations', description: 'Seedream 4.0 - ByteDance ARK (better quality)', usageWeight: 5 },
+  { id: 'kontext', name: 'Kontext', provider: 'pollinations', description: 'FLUX.1 Kontext - In-context editing & generation', usageWeight: 5 },
+  { id: 'nanobanana', name: 'Nanobanana', provider: 'pollinations', description: 'NanoBanana - Gemini 2.5 Flash Image', usageWeight: 5 },
+  { id: 'seedream-pro', name: 'Seedream Pro', provider: 'pollinations', description: 'Seedream 4.5 Pro - ByteDance ARK (4K, Multi-Image)', usageWeight: 15 },
+  { id: 'nanobanana-pro', name: 'Nanobanana Pro', provider: 'pollinations', description: 'NanoBanana Pro - Gemini 3 Pro Image (4K, Thinking)', usageWeight: 15 },
   // AppyPie models
   { id: 'appypie-sdxl', name: 'AppyPie SDXL', provider: 'appypie', description: 'SDXL - High-resolution, realistic image generation', usageWeight: 15 },
   { id: 'appypie-sd-inpainting', name: 'AppyPie SD Inpainting', provider: 'appypie', description: 'Stable Diffusion 1.5 Inpainting - Image editing with masks', usageWeight: 10 },
@@ -298,17 +319,16 @@ export const IMAGE_MODELS: ImageModel[] = [
 
 // Available video models
 export const VIDEO_MODELS: VideoModel[] = [
-  { id: 'seedance-pro', name: 'Seedance Pro', provider: 'pollinations', description: 'Seedance Pro-Fast - BytePlus video generation (better prompt adherence)', downtimeUntil: POLLINATIONS_DOWNTIME, usageWeight: 50 },
-  { id: 'seedance', name: 'Seedance', provider: 'pollinations', description: 'Seedance Lite - BytePlus video generation (better quality)', downtimeUntil: POLLINATIONS_DOWNTIME, usageWeight: 50 },
-  { id: 'veo', name: 'Veo', provider: 'pollinations', description: "Veo 3.1 Fast - Google's video generation model (preview)", downtimeUntil: POLLINATIONS_DOWNTIME, usageWeight: 50 },
-  { id: 'openai-audio', name: 'OpenAI GPT-4o Mini Audio', provider: 'pollinations', description: 'OpenAI GPT-4o Mini Audio', downtimeUntil: POLLINATIONS_DOWNTIME, usageWeight: 25 },
+  { id: 'seedance-pro', name: 'Seedance Pro', provider: 'pollinations', description: 'Seedance Pro-Fast - BytePlus video generation (better prompt adherence)', usageWeight: 50 },
+  { id: 'seedance', name: 'Seedance', provider: 'pollinations', description: 'Seedance Lite - BytePlus video generation (better quality)', usageWeight: 50 },
+  { id: 'veo', name: 'Veo', provider: 'pollinations', description: "Veo 3.1 Fast - Google's video generation model (preview)", usageWeight: 50 },
+  { id: 'openai-audio', name: 'OpenAI GPT-4o Mini Audio', provider: 'pollinations', description: 'OpenAI GPT-4o Mini Audio', usageWeight: 25 },
 ];
 
 // Provider base URLs
 export const PROVIDER_URLS = {
   pollinations: 'https://gen.pollinations.ai',
   openrouter: 'https://openrouter.ai',
-  liz: 'https://lizley.zeabur.app',
   appypie: {
     sdxl: 'https://gateway.appypie.com/getImage/v1/getSDXLImage',
     inpainting: 'https://gateway-stable-diffusion-v1-5-inpainting.appypie.workers.dev/getImage',
@@ -317,4 +337,5 @@ export const PROVIDER_URLS = {
   stablehorde: 'https://stablehorde.net/api/v2',
   meridian: 'https://meridianlabsapp.website/api',
   github: 'https://models.inference.ai.azure.com',
+  poe: 'https://api.poe.com/v1',
 };

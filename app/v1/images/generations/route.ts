@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { auth } from '@clerk/nextjs/server';
 import { extractApiKey, validateApiKey, trackUsage, checkRateLimit, getRateLimitInfo, checkDailyLimit, getDailyLimitInfo, ApiKey, applyPlanOverride, applyPeakHoursLimit } from '@/lib/api-keys';
 import { IMAGE_MODELS, PROVIDER_URLS, ImageModel, PREMIUM_MODELS } from '@/lib/providers';
-import { getCorsHeaders, getPollinationsApiKey, safeResponseJson } from '@/lib/utils';
+import { getCorsHeaders, getPollinationsApiKey, getPollinationsApiKeys, safeResponseJson, hasProAccess } from '@/lib/utils';
 import { supabaseAdmin } from '@/lib/supabase';
 
 export const runtime = 'nodejs';
@@ -201,9 +201,9 @@ export async function POST(request: NextRequest) {
     // Check if model is premium and if user has access
     const isPremium = PREMIUM_MODELS.has(modelId);
     // Pro access if they have a pro/enterprise/developer/admin plan
-    const hasProAccess = ['pro', 'enterprise', 'developer', 'admin'].includes(userPlan);
+    const hasPro = hasProAccess(userPlan);
 
-    if (isPremium && !hasProAccess) {
+    if (isPremium && !hasPro) {
       return NextResponse.json(
         {
           error: {
@@ -567,11 +567,31 @@ export async function POST(request: NextRequest) {
       let retryCount = 0;
       const maxRetries = 3; // 3 retries for v1 to be extra safe
       let pollinationsResponse;
+      let currentApiKey = pollinationsApiKey;
 
       while (retryCount <= maxRetries) {
         try {
-          pollinationsResponse = await fetch(pollinationsUrl, { headers });
+          const currentHeaders: Record<string, string> = { ...headers };
+          if (currentApiKey) {
+            currentHeaders['Authorization'] = `Bearer ${currentApiKey}`;
+          }
+
+          pollinationsResponse = await fetch(pollinationsUrl, { headers: currentHeaders });
+          
           if (pollinationsResponse.ok) break;
+          
+          // Handle 401 Unauthorized by trying a different key
+          if (pollinationsResponse.status === 401) {
+            console.warn(`[V1-Images] Pollinations unauthorized (401). Attempting key rotation...`);
+            const allKeys = getPollinationsApiKeys();
+            if (allKeys.length > 1) {
+              // Pick a different key that isn't the current one
+              const otherKeys = allKeys.filter((k: string) => k !== currentApiKey);
+              currentApiKey = otherKeys[Math.floor(Math.random() * otherKeys.length)];
+              retryCount++;
+              continue;
+            }
+          }
           
           if (pollinationsResponse.status === 500 || pollinationsResponse.status === 504 || pollinationsResponse.status === 429) {
             console.warn(`[V1-Images] Pollinations returned ${pollinationsResponse.status}, retrying (${retryCount + 1}/${maxRetries})...`);

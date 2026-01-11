@@ -1,7 +1,8 @@
 {
   "permissions": {
     "allow": [
-      "Edit(lib/**)"
+      "Edit(lib/**)",
+      "Bash(node test-gemini-raw.ts)"
     ]
   }
 }

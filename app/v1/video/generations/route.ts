@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { auth } from '@clerk/nextjs/server';
 import { extractApiKey, validateApiKey, trackUsage, checkRateLimit, getRateLimitInfo, checkDailyLimit, getDailyLimitInfo, ApiKey, applyPlanOverride, applyPeakHoursLimit } from '@/lib/api-keys';
 import { VIDEO_MODELS, PROVIDER_URLS, PREMIUM_MODELS } from '@/lib/providers';
-import { getCorsHeaders } from '@/lib/utils';
+import { getCorsHeaders, hasProAccess, hasVideoAccess } from '@/lib/utils';
 import { supabaseAdmin } from '@/lib/supabase';
 
 export const runtime = 'nodejs';
@@ -181,12 +181,12 @@ export async function POST(request: NextRequest) {
     // Check if model is premium and if user has access
     const isPremium = PREMIUM_MODELS.has(modelId);
     // Pro access if they have a pro/enterprise/developer/admin plan
-    const hasProAccess = ['pro', 'enterprise', 'developer', 'admin'].includes(userPlan);
+    const hasPro = hasProAccess(userPlan);
 
     // Specific video access for Video Pro, Enterprise, or Admin plans
-    const hasVideoAccess = ['video_pro', 'enterprise', 'admin'].includes(userPlan);
+    const canAccessVideo = hasVideoAccess(userPlan);
 
-    if (!hasVideoAccess) {
+    if (!canAccessVideo) {
       return NextResponse.json(
         { 
           error: {
@@ -203,7 +203,7 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    if (isPremium && !hasProAccess && userPlan !== 'video_pro') {
+    if (isPremium && !hasPro) {
       return NextResponse.json(
         {
           error: {

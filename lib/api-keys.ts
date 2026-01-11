@@ -1,6 +1,6 @@
 import { v4 as uuidv4 } from 'uuid';
-import { supabaseAdmin } from './supabase.ts';
-import { estimateTokens } from './chat-utils.ts';
+import { supabaseAdmin } from './supabase';
+import { estimateTokens } from './chat-utils';
 
 export interface ApiKey {
   id: string;

@@ -108,5 +108,11 @@ async function upgradeUserByEmail(email: string) {
   }
 }
 
-const targetEmail = process.argv[2] || 'kyhas@hotmail.co.uk';
+const targetEmail = process.argv[2] || 'ceciabby2@gmail.com';
+
+if (!targetEmail) {
+  console.error('Please provide an email as an argument.');
+  process.exit(1);
+}
+
 upgradeUserByEmail(targetEmail);

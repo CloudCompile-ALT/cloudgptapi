@@ -35,12 +35,12 @@ async function createKeyForUser(query: string) {
       .maybeSingle();
 
     if (profileError) {
-      console.error(`Error finding profile for ${email}:`, profileError.message);
+      console.error(`Error finding profile for ${query}:`, profileError.message);
       return;
     }
 
     if (!profile) {
-      console.error(`Profile not found for email: ${email}`);
+      console.error(`Profile not found for query: ${query}`);
       return;
     }
 

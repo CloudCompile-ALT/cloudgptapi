@@ -1,5 +1,5 @@
 
-import { validateApiKey } from './lib/api-keys.ts';
+import { validateApiKey } from './lib/api-keys';
 import * as dotenv from 'dotenv';
 import path from 'path';
 

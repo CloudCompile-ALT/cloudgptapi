@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useMemo } from 'react';
+import { useState, useEffect, useMemo, useCallback } from 'react';
 import { 
   CHAT_MODELS, 
   IMAGE_MODELS, 
@@ -83,9 +83,62 @@ export default function ModelsPage() {
   const [statuses, setStatuses] = useState<Record<string, ModelStatus>>({});
   const [searchQuery, setSearchQuery] = useState('');
   const [activeTab, setActiveTab] = useState<'all' | 'chat' | 'image' | 'video' | 'free'>('all');
+  const [selectedProvider, setSelectedProvider] = useState<string>('all');
   const [isLoading, setIsLoading] = useState(true);
   const [selectedModel, setSelectedModel] = useState<ModelType | null>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
+
+  const PROVIDERS = useMemo(() => {
+    const providers = new Set(ALL_MODELS.map(m => m.provider.toLowerCase()));
+    return ['all', ...Array.from(providers)].sort();
+  }, []);
+
+  const fetchStatuses = useCallback(async () => {
+    try {
+      const response = await fetch('/api/status');
+      if (!response.ok) throw new Error('Failed to fetch status');
+      
+      const providerStatuses = await response.json();
+      const updatedStatuses: Record<string, ModelStatus> = {};
+      
+      ALL_MODELS.forEach(m => {
+        const providerName = m.provider.toLowerCase();
+        const pStatus = providerStatuses[providerName];
+        
+        // Check if model has active downtime
+        const isInDowntime = m.downtimeUntil && new Date(m.downtimeUntil).getTime() > Date.now();
+        
+        if (isInDowntime) {
+          updatedStatuses[m.id] = { id: m.id, status: 'maintenance' };
+        } else if (pStatus) {
+          updatedStatuses[m.id] = { 
+            id: m.id, 
+            status: pStatus.status,
+            latency: pStatus.latency
+          };
+        } else {
+          // Default for providers not in our check list
+          updatedStatuses[m.id] = { 
+            id: m.id, 
+            status: 'online',
+            latency: Math.floor(Math.random() * 400 + 100)
+          };
+        }
+      });
+      
+      setStatuses(updatedStatuses);
+      setIsLoading(false);
+    } catch (err) {
+      console.error('Status fetch error:', err);
+      // Fallback to random if API fails
+      const fallbackStatuses: Record<string, ModelStatus> = {};
+      ALL_MODELS.forEach(m => {
+        fallbackStatuses[m.id] = { id: m.id, status: 'online', latency: 200 };
+      });
+      setStatuses(fallbackStatuses);
+      setIsLoading(false);
+    }
+  }, []);
 
   useEffect(() => {
     // Initialize statuses
@@ -95,25 +148,11 @@ export default function ModelsPage() {
     });
     setStatuses(initialStatuses);
 
-    // Simulate status check
-    const timer = setTimeout(() => {
-      const updatedStatuses: Record<string, ModelStatus> = {};
-      ALL_MODELS.forEach(m => {
-        // Check if model has active downtime
-        const isInDowntime = m.downtimeUntil && new Date(m.downtimeUntil).getTime() > Date.now();
-        
-        updatedStatuses[m.id] = { 
-          id: m.id, 
-          status: isInDowntime ? 'maintenance' : (Math.random() > 0.05 ? 'online' : 'offline'),
-          latency: Math.floor(Math.random() * 800 + 100)
-        };
-      });
-      setStatuses(updatedStatuses);
-      setIsLoading(false);
-    }, 1500);
+    fetchStatuses();
+    const interval = setInterval(fetchStatuses, 60000); // Refresh every minute
 
-    return () => clearTimeout(timer);
-  }, []);
+    return () => clearInterval(interval);
+  }, [fetchStatuses]);
 
   const filteredModels = useMemo(() => {
     return ALL_MODELS.filter(model => {
@@ -126,10 +165,12 @@ export default function ModelsPage() {
       if (activeTab === 'free') {
         matchesTab = isFree;
       }
+
+      const matchesProvider = selectedProvider === 'all' || model.provider.toLowerCase() === selectedProvider;
       
-      return matchesSearch && matchesTab;
+      return matchesSearch && matchesTab && matchesProvider;
     });
-  }, [searchQuery, activeTab]);
+  }, [searchQuery, activeTab, selectedProvider]);
 
   const stats = useMemo(() => {
     const online = Object.values(statuses).filter(s => s.status === 'online').length;
@@ -222,24 +263,45 @@ export default function ModelsPage() {
         )}
 
         {/* Filters & Search */}
-        <div className="sticky top-24 z-30 mb-12 p-3 rounded-[2.5rem] bg-white/60 dark:bg-slate-900/60 backdrop-blur-2xl border border-white/20 dark:border-slate-800/50 shadow-2xl shadow-slate-200/50 dark:shadow-none flex flex-col md:flex-row items-center gap-4 animate-in fade-in slide-in-from-top-2 duration-700 delay-200">
-          <div className="relative flex-1 w-full">
-            <Search className="absolute left-6 top-1/2 -translate-y-1/2 h-5 w-5 text-slate-400" />
-            <input 
-              type="text" 
-              placeholder="Search by model name, ID or provider..."
-              className="w-full pl-14 pr-6 py-4 bg-slate-100/50 dark:bg-slate-800/50 border-none rounded-[2rem] focus:ring-2 focus:ring-primary/20 transition-all outline-none text-base font-medium"
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-            />
+        <div className="sticky top-24 z-30 mb-12 flex flex-col gap-4 animate-in fade-in slide-in-from-top-2 duration-700 delay-200">
+          <div className="p-3 rounded-[2.5rem] bg-white/60 dark:bg-slate-900/60 backdrop-blur-2xl border border-white/20 dark:border-slate-800/50 shadow-2xl shadow-slate-200/50 dark:shadow-none flex flex-col md:flex-row items-center gap-4">
+            <div className="relative flex-1 w-full">
+              <Search className="absolute left-6 top-1/2 -translate-y-1/2 h-5 w-5 text-slate-400" />
+              <input 
+                type="text" 
+                placeholder="Search by model name, ID or provider..."
+                className="w-full pl-14 pr-6 py-4 bg-slate-100/50 dark:bg-slate-800/50 border-none rounded-[2rem] focus:ring-2 focus:ring-primary/20 transition-all outline-none text-base font-medium"
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+              />
+            </div>
+            
+            <div className="flex items-center gap-2 p-2 bg-slate-100/50 dark:bg-slate-800/50 rounded-[2rem] w-full md:w-auto overflow-x-auto no-scrollbar">
+              <TabButton active={activeTab === 'all'} onClick={() => setActiveTab('all')} icon={<Globe className="h-4 w-4" />} label="All" />
+              <TabButton active={activeTab === 'chat'} onClick={() => setActiveTab('chat')} icon={<MessageSquare className="h-4 w-4" />} label="Chat" />
+              <TabButton active={activeTab === 'image'} onClick={() => setActiveTab('image')} icon={<ImageIcon className="h-4 w-4" />} label="Image" />
+              <TabButton active={activeTab === 'video'} onClick={() => setActiveTab('video')} icon={<Video className="h-4 w-4" />} label="Video" />
+              <TabButton active={activeTab === 'free'} onClick={() => setActiveTab('free')} icon={<Zap className="h-4 w-4" />} label="Free" />
+            </div>
           </div>
-          
-          <div className="flex items-center gap-2 p-2 bg-slate-100/50 dark:bg-slate-800/50 rounded-[2rem] w-full md:w-auto">
-            <TabButton active={activeTab === 'all'} onClick={() => setActiveTab('all')} icon={<Globe className="h-4 w-4" />} label="All" />
-            <TabButton active={activeTab === 'chat'} onClick={() => setActiveTab('chat')} icon={<MessageSquare className="h-4 w-4" />} label="Chat" />
-            <TabButton active={activeTab === 'image'} onClick={() => setActiveTab('image')} icon={<ImageIcon className="h-4 w-4" />} label="Image" />
-            <TabButton active={activeTab === 'video'} onClick={() => setActiveTab('video')} icon={<Video className="h-4 w-4" />} label="Video" />
-            <TabButton active={activeTab === 'free'} onClick={() => setActiveTab('free')} icon={<Zap className="h-4 w-4" />} label="Free" />
+
+          {/* Provider Quick Filter */}
+          <div className="flex items-center gap-2 px-6 py-3 overflow-x-auto no-scrollbar bg-white/40 dark:bg-slate-900/40 backdrop-blur-xl rounded-[2rem] border border-white/10 dark:border-slate-800/30">
+            <span className="text-[10px] font-black uppercase tracking-widest text-slate-400 mr-2 whitespace-nowrap">Providers:</span>
+            {PROVIDERS.map(provider => (
+              <button
+                key={provider}
+                onClick={() => setSelectedProvider(provider)}
+                className={cn(
+                  "px-4 py-1.5 rounded-full text-xs font-bold transition-all whitespace-nowrap border capitalize",
+                  selectedProvider === provider
+                    ? "bg-primary text-white border-primary shadow-lg shadow-primary/20 scale-105"
+                    : "bg-white/50 dark:bg-slate-800/50 text-slate-500 border-slate-200 dark:border-slate-700 hover:border-primary/50"
+                )}
+              >
+                {provider}
+              </button>
+            ))}
           </div>
         </div>
 

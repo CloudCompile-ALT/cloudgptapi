@@ -15,7 +15,7 @@ const plans = [
       'Standard image generation',
       '60 requests per minute',
       'Basic community support',
-      '1,000 requests per month',
+      '1,000 requests per day',
     ],
     buttonText: 'Get Started',
     buttonHref: '/dashboard',

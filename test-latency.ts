@@ -7,7 +7,6 @@ dotenv.config({ path: path.resolve(process.cwd(), '.env.local') });
 
 const PROVIDERS = [
   { name: 'Pollinations', url: 'https://gen.pollinations.ai/v1/chat/completions', auth: '' },
-  { name: 'Liz Proxy', url: 'https://lizley.zeabur.app/v1/chat/completions', auth: `Bearer ${process.env.LIZ_API_KEY || 'sk-d38705df52b386e905f257a4019f8f2a'}` },
 ];
 
 async function measureLatency(provider: any, model: string) {
