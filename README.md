@@ -176,14 +176,23 @@ curl -X POST https://your-app.vercel.app/v1/chat/completions \
 
 | Model ID | Name | Description |
 |----------|------|-------------|
-| `liz-claude-3-5-sonnet` | Claude 3.5 Sonnet (Liz) | Optimized Anthropic flagship |
+| `liz-claude-3-7-sonnet` | Claude 3.7 Sonnet (Liz) | Latest Anthropic flagship (v3.7) |
+| `liz-claude-3-5-sonnet` | Claude 3.5 Sonnet (Liz) | Optimized Anthropic flagship (v3.5) |
 | `liz-claude-3-opus` | Claude 3 Opus (Liz) | NSFW/Smut Optimized roleplay model |
+| `liz-claude-sonnet-4` | Claude Sonnet 4 (Liz) | Next-gen Anthropic model (v4) |
+| `liz-claude-opus-4` | Claude Opus 4 (Liz) | Creative/NSFW Optimized roleplay (v4) |
+| `liz-claude-opus-4.5` | Claude Opus 4.5 (Liz) | Ultimate reasoning & narrative (v4.5) |
 | `liz-gpt-4o` | GPT-4o (Liz) | Reliable OpenAI flagship |
+| `liz-gemini-3-pro` | Gemini 3 Pro (Liz) | Next-gen Google flagship (Preview) |
+| `liz-gemini-3-flash` | Gemini 3 Flash (Liz) | Next-gen Google fast model (Preview) |
+| `liz-gemini-2.5-pro` | Gemini 2.5 Pro (Liz) | Advanced Google flagship |
+| `liz-gemini-2.5-flash` | Gemini 2.5 Flash (Liz) | Latest Google fast model |
+| `liz-gemini-2.0-flash` | Gemini 2.0 Flash (Liz) | Reliable Google fast model |
+| `liz-gemini-1.5-pro` | Gemini 1.5 Pro (Liz) | Massive context analysis |
 | `liz-o1` | OpenAI o1 (Liz) | Deep reasoning & strategy |
 | `liz-o3-mini` | OpenAI o3-mini (Liz) | Fast reasoning & coding |
 | `liz-deepseek-v3` | DeepSeek V3 (Liz) | Top-tier open source model |
 | `liz-deepseek-r1` | DeepSeek R1 (Liz) | Reasoning-focused open source |
-| `liz-gemini-1.5-pro` | Gemini 1.5 Pro (Liz) | Massive context analysis |
 | `liz-qwen3-235b` | Qwen3 235B (Liz) | Large-scale multilingual model |
 | `liz-llama-3.3-70b` | Llama 3.3 70B (Liz) | Efficient flagship-class model |
 

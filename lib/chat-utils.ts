@@ -19,7 +19,7 @@ const hashString = (str: string, seed = 0) => {
 export const MAX_MESSAGE_LENGTH = 2000000; // 2MB per message (~1.5M tokens)
 export const MAX_TOTAL_LENGTH = 10000000; // 10MB total for all messages
 export const MAX_MESSAGES_COUNT = 500;
-export const PROVIDER_TIMEOUT_MS = 120000; // 120 seconds
+export const PROVIDER_TIMEOUT_MS = 180000; // 180 seconds (3 minutes) for slow models like Opus
 
 /**
  * Generate a stable hash for a character based on its metadata.
@@ -186,15 +186,25 @@ export const modelAliases: Record<string, string> = {
 // Provider-specific model mapping (CloudGPT ID -> Provider ID)
 export const PROVIDER_MODEL_MAPPING: Record<string, string> = {
   // Liz Proxy Mapping
-  'liz-claude-3-5-sonnet': 'claude-3-5-sonnet',
+  'liz-claude-3-5-sonnet': 'claude-3.5-sonnet',
+  'liz-claude-3-7-sonnet': 'claude-3.7-sonnet',
   'liz-claude-3-opus': 'claude-3-opus',
+  'liz-claude-sonnet-4': 'claude-sonnet-4',
+  'liz-claude-opus-4': 'claude-opus-4',
+  'liz-claude-opus-4.5': 'claude-opus-4.5',
   'liz-gpt-4o': 'gpt-4o',
+  'liz-gemini-2.0-flash': 'gemini-2.0-flash-001',
+  'liz-gemini-2.0-flash-lite': 'gemini-2.0-flash-lite-001',
+  'liz-gemini-2.5-flash': 'gemini-2.5-flash',
+  'liz-gemini-2.5-pro': 'gemini-2.5-pro',
+  'liz-gemini-3-flash': 'gemini-3-flash-preview',
+  'liz-gemini-3-pro': 'gemini-3-pro-preview',
   'liz-gemini-1.5-pro': 'gemini-1.5-pro',
   'liz-deepseek-v3': 'deepseek-v3',
   'liz-deepseek-r1': 'deepseek-r1',
   'liz-o1': 'o1',
   'liz-o3-mini': 'o3-mini',
-  'liz-qwen3-235b': 'qwen-235b',
+  'liz-qwen3-235b': 'qwen3-235b-a22b',
   'liz-llama-3.3-70b': 'llama-3.3-70b',
   
   // OpenRouter specific mappings if needed

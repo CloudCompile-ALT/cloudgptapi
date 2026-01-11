@@ -908,10 +908,12 @@ export async function POST(request: NextRequest) {
 
       // Vertex AI based models (Gemini/Claude) on Pollinations don't allow both temperature and top_p
       const isVertexModel = 
-        model.provider === 'gemini' || 
+        (model.provider === 'gemini' || 
         model.provider === 'claude' || 
         modelId.includes('gemini') || 
-        modelId.includes('claude');
+        modelId.includes('claude')) && 
+        model.provider !== 'liz' && 
+        model.provider !== 'openrouter';
 
       if (isGitHubReasoningModel) {
         delete requestBody.temperature;

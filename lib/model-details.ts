@@ -201,6 +201,30 @@ export const CHAT_MODEL_DETAILS: Record<string, ModelDetails> = {
       releaseDate: '2024'
     }
   },
+  // Liz Proxy Models
+  'liz-claude-3-7-sonnet': {
+    id: 'liz-claude-3-7-sonnet',
+    name: 'Claude 3.7 Sonnet (Liz)',
+    provider: 'Liz Proxy',
+    family: 'Claude 3.7',
+    description: 'Anthropic Claude 3.7 Sonnet via Liz Proxy',
+    longDescription: 'Anthropic\'s most intelligent and capable model to date, featuring breakthrough reasoning and creative writing capabilities. Proxied via Liz for uncensored performance.',
+    strengths: [
+      'Reasoning',
+      'Creative Writing',
+      'Coding',
+      'Uncensored Content'
+    ],
+    weaknesses: [
+      'Higher Latency'
+    ],
+    useCases: ['Roleplay', 'Complex Coding', 'Creative Writing', 'Deep Reasoning'],
+    technicalSpecs: {
+      contextWindow: '200K tokens',
+      architecture: 'Transformer-based',
+      releaseDate: '2025'
+    }
+  },
   'liz-claude-3-5-sonnet': {
     id: 'liz-claude-3-5-sonnet',
     name: 'Claude 3.5 Sonnet (Liz)',
@@ -251,6 +275,82 @@ export const CHAT_MODEL_DETAILS: Record<string, ModelDetails> = {
       releaseDate: '2024'
     }
   },
+  'liz-claude-sonnet-4': {
+    id: 'liz-claude-sonnet-4',
+    name: 'Claude Sonnet 4 (Liz)',
+    provider: 'Liz Proxy',
+    family: 'Claude 4',
+    description: 'Anthropic Claude Sonnet 4 via Liz Proxy',
+    longDescription: 'The next generation of Claude Sonnet, offering significantly improved reasoning and creative capabilities while maintaining high speed. Proxied via Liz for maximum flexibility.',
+    strengths: [
+      'State-of-the-art reasoning',
+      'Excellent creative writing',
+      'Faster than Opus 3',
+      'Strong instruction following',
+      'Great at complex multi-step tasks'
+    ],
+    weaknesses: [
+      'Newer model, still being refined',
+      'Higher usage weight than 3.5'
+    ],
+    useCases: ['Advanced roleplay', 'Complex coding', 'Strategic planning', 'Content creation'],
+    technicalSpecs: {
+      contextWindow: '200K tokens',
+      architecture: 'Next-gen Transformer',
+      releaseDate: '2025'
+    }
+  },
+  'liz-claude-opus-4': {
+    id: 'liz-claude-opus-4',
+    name: 'Claude Opus 4 (Liz)',
+    provider: 'Liz Proxy',
+    family: 'Claude 4',
+    description: 'Anthropic Claude Opus 4 via Liz Proxy (Creative/NSFW)',
+    longDescription: 'The pinnacle of the Claude 4 family, Opus 4 provides unparalleled creative freedom and deep reasoning. This version is specifically tuned for unrestricted creative expression.',
+    strengths: [
+      'Unmatched creative depth',
+      'Deep philosophical understanding',
+      'Maximum creative freedom (NSFW/Smut optimized)',
+      'Human-like empathy and tone',
+      'Exceptional at nuanced roleplay'
+    ],
+    weaknesses: [
+      'Slower response times',
+      'High usage weight',
+      'Can occasionally hang on complex prompts'
+    ],
+    useCases: ['Premium roleplay', 'Philosophical exploration', 'Creative writing', 'NSFW content', 'Deep emotional support'],
+    technicalSpecs: {
+      contextWindow: '200K tokens',
+      architecture: 'Next-gen Transformer',
+      releaseDate: '2025'
+    }
+  },
+  'liz-claude-opus-4.5': {
+    id: 'liz-claude-opus-4.5',
+    name: 'Claude Opus 4.5 (Liz)',
+    provider: 'Liz Proxy',
+    family: 'Claude 4',
+    description: 'Anthropic Claude Opus 4.5 via Liz Proxy (Ultimate Reasoning)',
+    longDescription: 'The most advanced model available via Liz Proxy, Opus 4.5 pushes the boundaries of AI reasoning and creative expression beyond current limits.',
+    strengths: [
+      'Ultimate reasoning capabilities',
+      'Superior world-building and lore consistency',
+      'Extremely high emotional intelligence',
+      'Perfect for the most complex creative tasks',
+      'Highly stable and reliable'
+    ],
+    weaknesses: [
+      'Highest usage weight',
+      'Slowest response time'
+    ],
+    useCases: ['Large-scale world building', 'Complex narrative design', 'Advanced scientific reasoning', 'Ultimate creative partner'],
+    technicalSpecs: {
+      contextWindow: '200K tokens',
+      architecture: 'Advanced Next-gen Transformer',
+      releaseDate: '2025'
+    }
+  },
   'liz-gpt-4o': {
     id: 'liz-gpt-4o',
     name: 'GPT-4o (Liz)',
@@ -299,6 +399,133 @@ export const CHAT_MODEL_DETAILS: Record<string, ModelDetails> = {
       contextWindow: '1M+ tokens',
       architecture: 'MoE Transformer',
       releaseDate: '2024'
+    }
+  },
+  'liz-gemini-2.0-flash': {
+    id: 'liz-gemini-2.0-flash',
+    name: 'Gemini 2.0 Flash (Liz)',
+    provider: 'Liz Proxy',
+    family: 'Gemini 2',
+    description: 'Google Gemini 2.0 Flash via Liz Proxy',
+    longDescription: 'Gemini 2.0 Flash is designed for speed and efficiency, offering high-speed performance across a wide range of tasks while maintaining strong reasoning capabilities.',
+    strengths: [
+      'Extremely fast response times',
+      'High efficiency for common tasks',
+      'Strong multimodal capabilities',
+      'Good instruction following',
+      'Cost-effective performance'
+    ],
+    weaknesses: [
+      'Smaller knowledge base than Pro models',
+      'May struggle with very complex reasoning'
+    ],
+    useCases: ['Real-time applications', 'Quick summaries', 'Basic coding help', 'Multimodal interactions', 'High-volume tasks'],
+    technicalSpecs: {
+      contextWindow: '1M tokens',
+      architecture: 'Next-gen Transformer',
+      releaseDate: '2024'
+    }
+  },
+  'liz-gemini-2.5-flash': {
+    id: 'liz-gemini-2.5-flash',
+    name: 'Gemini 2.5 Flash (Liz)',
+    provider: 'Liz Proxy',
+    family: 'Gemini 2.5',
+    description: 'Google Gemini 2.5 Flash via Liz Proxy',
+    longDescription: 'Gemini 2.5 Flash represents the latest in Google\'s efficient model series, providing even better reasoning and multimodal performance than 2.0.',
+    strengths: [
+      'Improved reasoning over 2.0 Flash',
+      'Superior multimodal understanding',
+      'Large context window',
+      'Excellent speed-to-performance ratio',
+      'Reliable output consistency'
+    ],
+    weaknesses: [
+      'Still less powerful than Pro versions',
+      'Proxied access overhead'
+    ],
+    useCases: ['Advanced multimodal tasks', 'Fast complex reasoning', 'Long context retrieval', 'Efficient agentic workflows'],
+    technicalSpecs: {
+      contextWindow: '1M tokens',
+      architecture: 'Advanced Transformer',
+      releaseDate: '2025'
+    }
+  },
+  'liz-gemini-2.5-pro': {
+    id: 'liz-gemini-2.5-pro',
+    name: 'Gemini 2.5 Pro (Liz)',
+    provider: 'Liz Proxy',
+    family: 'Gemini 2.5',
+    description: 'Google Gemini 2.5 Pro via Liz Proxy',
+    longDescription: 'Gemini 2.5 Pro is the advanced flagship from Google, offering state-of-the-art reasoning, multimodal capabilities, and an enormous context window.',
+    strengths: [
+      'State-of-the-art reasoning',
+      'Massive context window',
+      'Exceptional multimodal understanding',
+      'Top-tier creative writing',
+      'Highly stable and reliable'
+    ],
+    weaknesses: [
+      'Slower than Flash versions',
+      'Higher usage weight'
+    ],
+    useCases: ['Deep analysis', 'Complex software engineering', 'Large-scale document processing', 'Creative content generation', 'Advanced scientific research'],
+    technicalSpecs: {
+      contextWindow: '2M tokens',
+      architecture: 'Advanced MoE Transformer',
+      releaseDate: '2025'
+    }
+  },
+  'liz-gemini-3-flash': {
+    id: 'liz-gemini-3-flash',
+    name: 'Gemini 3 Flash (Liz)',
+    provider: 'Liz Proxy',
+    family: 'Gemini 3',
+    description: 'Google Gemini 3 Flash via Liz Proxy (Preview)',
+    longDescription: 'The next generation of Google\'s efficient models, Gemini 3 Flash (Preview) offers a glimpse into the future of high-speed, high-capability AI.',
+    strengths: [
+      'Next-gen performance',
+      'Incredible speed',
+      'Enhanced multimodal logic',
+      'Experimental features',
+      'Efficient resource usage'
+    ],
+    weaknesses: [
+      'Experimental/Preview status',
+      'Potential for unexpected behavior',
+      'Limited availability'
+    ],
+    useCases: ['Cutting-edge application development', 'Experimental AI workflows', 'Testing next-gen capabilities', 'High-speed future-proofing'],
+    technicalSpecs: {
+      contextWindow: '1M+ tokens',
+      architecture: 'Gemini 3 Architecture',
+      releaseDate: '2025 (Preview)'
+    }
+  },
+  'liz-gemini-3-pro': {
+    id: 'liz-gemini-3-pro',
+    name: 'Gemini 3 Pro (Liz)',
+    provider: 'Liz Proxy',
+    family: 'Gemini 3',
+    description: 'Google Gemini 3 Pro via Liz Proxy (Preview)',
+    longDescription: 'Google\'s future flagship model, Gemini 3 Pro (Preview), represents the ultimate in reasoning and multimodal AI technology.',
+    strengths: [
+      'Ultimate reasoning performance',
+      'Next-gen multimodal synthesis',
+      'Massive future-ready context',
+      'Deep conceptual understanding',
+      'Top-tier problem solving'
+    ],
+    weaknesses: [
+      'Experimental/Preview status',
+      'Highest latency',
+      'Very high usage weight'
+    ],
+    useCases: ['Future-tech research', 'Ultimate conceptual design', 'Next-gen software architecture', 'Experimental deep reasoning'],
+    technicalSpecs: {
+      contextWindow: '2M+ tokens',
+      architecture: 'Gemini 3 Architecture',
+      releaseDate: '2025 (Preview)'
     }
   },
   'liz-deepseek-v3': {

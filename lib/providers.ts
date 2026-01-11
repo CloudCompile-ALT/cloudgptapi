@@ -192,9 +192,18 @@ const POE_CHAT_MODELS: ChatModel[] = [
 
 const LIZ_CHAT_MODELS: ChatModel[] = [
   // Liz's flagship models (proxied)
+  { id: 'liz-claude-3-7-sonnet', name: 'Claude 3.7 Sonnet (Liz)', provider: 'liz', description: 'Anthropic Claude 3.7 Sonnet via Liz Proxy', usageWeight: 15 },
   { id: 'liz-claude-3-5-sonnet', name: 'Claude 3.5 Sonnet (Liz)', provider: 'liz', description: 'Anthropic Claude 3.5 Sonnet via Liz Proxy', usageWeight: 15 },
   { id: 'liz-claude-3-opus', name: 'Claude 3 Opus (Liz)', provider: 'liz', description: 'Anthropic Claude 3 Opus via Liz Proxy (NSFW/Smut Optimized)', usageWeight: 30 },
+  { id: 'liz-claude-sonnet-4', name: 'Claude Sonnet 4 (Liz)', provider: 'liz', description: 'Anthropic Claude Sonnet 4 via Liz Proxy', usageWeight: 15 },
+  { id: 'liz-claude-opus-4', name: 'Claude Opus 4 (Liz)', provider: 'liz', description: 'Anthropic Claude Opus 4 via Liz Proxy (Creative/NSFW)', usageWeight: 30 },
+  { id: 'liz-claude-opus-4.5', name: 'Claude Opus 4.5 (Liz)', provider: 'liz', description: 'Anthropic Claude Opus 4.5 via Liz Proxy (Ultimate Reasoning)', usageWeight: 40 },
   { id: 'liz-gpt-4o', name: 'GPT-4o (Liz)', provider: 'liz', description: 'OpenAI GPT-4o via Liz Proxy', usageWeight: 15 },
+  { id: 'liz-gemini-3-pro', name: 'Gemini 3 Pro (Liz)', provider: 'liz', description: 'Google Gemini 3 Pro via Liz Proxy (Preview)', usageWeight: 25 },
+  { id: 'liz-gemini-3-flash', name: 'Gemini 3 Flash (Liz)', provider: 'liz', description: 'Google Gemini 3 Flash via Liz Proxy (Preview)', usageWeight: 10 },
+  { id: 'liz-gemini-2.5-pro', name: 'Gemini 2.5 Pro (Liz)', provider: 'liz', description: 'Google Gemini 2.5 Pro via Liz Proxy', usageWeight: 20 },
+  { id: 'liz-gemini-2.5-flash', name: 'Gemini 2.5 Flash (Liz)', provider: 'liz', description: 'Google Gemini 2.5 Flash via Liz Proxy', usageWeight: 5 },
+  { id: 'liz-gemini-2.0-flash', name: 'Gemini 2.0 Flash (Liz)', provider: 'liz', description: 'Google Gemini 2.0 Flash via Liz Proxy', usageWeight: 5 },
   { id: 'liz-gemini-1.5-pro', name: 'Gemini 1.5 Pro (Liz)', provider: 'liz', description: 'Google Gemini 1.5 Pro via Liz Proxy', usageWeight: 20 },
   { id: 'liz-deepseek-v3', name: 'DeepSeek V3 (Liz)', provider: 'liz', description: 'DeepSeek V3 via Liz Proxy', usageWeight: 10 },
   { id: 'liz-deepseek-r1', name: 'DeepSeek R1 (Liz)', provider: 'liz', description: 'DeepSeek R1 Reasoning via Liz Proxy', usageWeight: 25 },
@@ -286,6 +295,7 @@ export const PREMIUM_MODELS = new Set([
   'grok-4-fast-non-reasoning',
   
   // Liz Premium Models
+  'liz-claude-3-7-sonnet',
   'liz-claude-3-5-sonnet',
   'liz-claude-3-opus',
   'liz-gpt-4o',
