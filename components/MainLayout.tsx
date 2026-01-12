@@ -1,7 +1,7 @@
 'use client';
 
 import React from 'react';
-import { useLogto } from '@logto/react';
+import { useUser, useClerk } from '@clerk/nextjs';
 import { Cloud, LayoutDashboard, Zap, Rocket, BookOpen, FileText, Shield, Code } from 'lucide-react';
 import { Sidebar } from './Sidebar';
 import { BottomNav } from './BottomNav';
@@ -36,7 +36,8 @@ function Header({
 }: { 
   isAppPage: boolean;
 }) {
-  const { isAuthenticated, signIn, signOut } = useLogto();
+  const { isSignedIn } = useUser();
+  const { openSignIn, signOut } = useClerk();
 
   return (
     <header className={cn(
@@ -65,9 +66,9 @@ function Header({
         )}
 
         <div className="flex items-center gap-4">
-          {!isAuthenticated ? (
+          {!isSignedIn ? (
             <button 
-              onClick={() => window.location.assign('/api/logto/sign-in')}
+              onClick={() => openSignIn()}
               className="rounded-lg bg-primary px-4 py-2 text-sm font-semibold text-white shadow-md shadow-primary/20 hover:bg-primary/90 transition-all"
             >
               Sign In
@@ -76,7 +77,7 @@ function Header({
             <div className="flex items-center gap-4">
               <UserStatus />
               <button 
-                onClick={() => window.location.assign('/api/logto/sign-out')}
+                onClick={() => signOut()}
                 className="text-sm font-medium text-slate-600 hover:text-primary transition-colors"
               >
                 Sign Out

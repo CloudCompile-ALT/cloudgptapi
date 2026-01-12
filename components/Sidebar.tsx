@@ -24,7 +24,7 @@ import {
   X
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
-import { useLogto } from '@logto/react';
+import { useUser } from '@clerk/nextjs';
 import { Logo } from './Logo';
 
 const navigation = [
@@ -44,14 +44,7 @@ const secondaryNavigation = [
 
 export function Sidebar({ isOpen, onClose }: { isOpen?: boolean; onClose?: () => void }) {
   const pathname = usePathname();
-  const { fetchUserInfo, isAuthenticated } = useLogto();
-  const [user, setUser] = React.useState<any>(null);
-
-  React.useEffect(() => {
-    if (isAuthenticated) {
-      fetchUserInfo().then(setUser).catch(console.error);
-    }
-  }, [isAuthenticated, fetchUserInfo]);
+  const { user, isSignedIn } = useUser();
 
   return (
     <>
@@ -167,14 +160,18 @@ export function Sidebar({ isOpen, onClose }: { isOpen?: boolean; onClose?: () =>
 
           <div className="flex items-center gap-2 sm:gap-3 px-3 sm:px-4 py-3 sm:py-4 rounded-2xl sm:rounded-3xl bg-white dark:bg-slate-950 border border-border shadow-sm">
             <div className="h-8 w-8 sm:h-10 sm:w-10 rounded-lg sm:rounded-xl bg-slate-100 dark:bg-slate-900 flex items-center justify-center overflow-hidden">
-              {user?.picture ? (
-                <img src={user.picture} alt="Profile" className="h-full w-full object-cover" />
+              {user?.imageUrl ? (
+                <img src={user.imageUrl} alt="Profile" className="h-full w-full object-cover" />
               ) : (
                 <User className="h-4 w-4 sm:h-5 sm:w-5 text-slate-500" />
               )}
             </div>
             <div className="flex-1 min-w-0">
-              <div className="text-xs sm:text-sm font-black truncate">{user?.name || user?.username || 'User'}</div>
+              <div className="text-xs sm:text-sm font-black truncate">
+                {user?.firstName && user?.lastName 
+                  ? `${user.firstName} ${user.lastName}` 
+                  : user?.firstName || user?.username || 'User'}
+              </div>
               <div className="text-[9px] sm:text-[10px] font-bold text-slate-500 uppercase tracking-widest truncate">Developer</div>
             </div>
           </div>

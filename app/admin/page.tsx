@@ -1,17 +1,17 @@
-import { getLogtoContext } from '@logto/next/server-actions';
-import { logtoConfig } from '@/lib/logto';
+import { auth, currentUser } from '@clerk/nextjs/server';
 import { Shield, Users, CreditCard, Activity, Search, AlertCircle, Check, X, ArrowUpRight, Crown, Package } from 'lucide-react';
 import { getAllUsers, promoteUser, assignPlan } from '@/lib/admin-actions';
 import { supabaseAdmin } from '@/lib/supabase';
 import { cn } from '@/lib/utils';
 
-// Force dynamic rendering to prevent prerendering errors with Logto authentication
+// Force dynamic rendering to prevent prerendering errors with authentication
 export const dynamic = 'force-dynamic';
 
 export default async function AdminPage() {
-  const { isAuthenticated, claims } = await getLogtoContext(logtoConfig);
+  const { userId } = await auth();
+  const user = await currentUser();
 
-  if (!isAuthenticated || !claims) {
+  if (!userId) {
     return (
       <div className="container mx-auto px-4 py-24 flex flex-col items-center justify-center min-h-[60vh]">
         <div className="p-4 rounded-full bg-red-100 dark:bg-red-900/30 mb-6">
@@ -34,12 +34,13 @@ export default async function AdminPage() {
   const { data: profile, error } = await supabaseAdmin
     .from('profiles')
     .select('role')
-    .eq('id', claims.sub)
+    .eq('id', userId)
     .single();
 
   const isAdmin = !error && profile?.role === 'admin';
 
   if (!isAdmin) {
+    const userEmail = user?.emailAddresses[0]?.emailAddress || 'Unknown user';
     return (
       <div className="container mx-auto px-4 py-24 flex flex-col items-center justify-center min-h-[60vh]">
         <div className="p-4 rounded-full bg-red-100 dark:bg-red-900/30 mb-6">
@@ -47,7 +48,7 @@ export default async function AdminPage() {
         </div>
         <h1 className="text-3xl font-bold mb-4">Access Denied</h1>
         <p className="text-slate-600 dark:text-slate-400 text-center max-w-md">
-          This area is restricted to administrators only. Your account ({claims.email || 'Unknown user'}) does not have permission to view this page.
+          This area is restricted to administrators only. Your account ({userEmail}) does not have permission to view this page.
         </p>
         <a 
           href="/"

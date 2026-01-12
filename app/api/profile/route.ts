@@ -1,20 +1,19 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { getLogtoContext } from '@logto/next/server-actions';
-import { logtoConfig } from '@/lib/logto';
+import { auth } from '@clerk/nextjs/server';
 import { supabaseAdmin } from '@/lib/supabase';
 
 export async function GET() {
   try {
-    const { isAuthenticated, claims } = await getLogtoContext(logtoConfig);
+    const { userId } = await auth();
     
-    if (!isAuthenticated || !claims) {
+    if (!userId) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
     const { data: profile, error } = await supabaseAdmin
       .from('profiles')
       .select('role, plan')
-      .eq('id', claims.sub)
+      .eq('id', userId)
       .maybeSingle();
 
     if (error) {

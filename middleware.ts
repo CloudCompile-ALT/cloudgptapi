@@ -9,20 +9,13 @@ const isApiKeyRoute = (path: string) => {
          path.startsWith("/api/image");
 };
 
-// Logto specific routes that Clerk should ignore
-const isLogtoRoute = (path: string) => {
-  return path.startsWith("/api/logto") || 
-         path.startsWith("/oidc") || 
-         path.startsWith("/.well-known");
-};
-
 const isProtectedRoute = createRouteMatcher(["/dashboard(.*)"]);
 
 export default clerkMiddleware(async (auth, req) => {
   const { pathname } = req.nextUrl;
 
-  // Skip Clerk for API routes and Logto routes
-  if (isApiKeyRoute(pathname) || isLogtoRoute(pathname)) {
+  // Skip Clerk for API routes
+  if (isApiKeyRoute(pathname)) {
     return NextResponse.next();
   }
 

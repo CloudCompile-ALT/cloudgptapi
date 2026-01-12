@@ -1,28 +1,27 @@
 'use server';
 
-import { getLogtoContext } from '@logto/next/server-actions';
-import { logtoConfig } from './logto';
+import { auth } from '@clerk/nextjs/server';
 import { supabaseAdmin } from './supabase';
 import { revalidatePath } from 'next/cache';
 
 async function verifyAdmin() {
-  const { isAuthenticated, claims } = await getLogtoContext(logtoConfig);
+  const { userId } = await auth();
 
-  if (!isAuthenticated || !claims) {
+  if (!userId) {
     throw new Error('Unauthorized: Admin access required');
   }
 
   const { data: profile, error } = await supabaseAdmin
     .from('profiles')
     .select('role')
-    .eq('id', claims.sub)
+    .eq('id', userId)
     .maybeSingle();
 
   if (error || !profile || profile.role !== 'admin') {
     throw new Error('Unauthorized: Admin access required');
   }
 
-  return claims;
+  return userId;
 }
 
 export async function getAllUsers() {

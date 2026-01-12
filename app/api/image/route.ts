@@ -1,6 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { getLogtoContext } from '@logto/next/server-actions';
-import { logtoConfig } from '@/lib/logto';
+import { auth } from '@clerk/nextjs/server';
 import { extractApiKey, validateApiKey, trackUsage, checkRateLimit, getRateLimitInfo, checkDailyLimit, getDailyLimitInfo, ApiKey, applyPlanOverride, applyPeakHoursLimit } from '@/lib/api-keys';
 import { IMAGE_MODELS, PROVIDER_URLS, ImageModel, PREMIUM_MODELS } from '@/lib/providers';
 import { getPollinationsApiKey, safeResponseJson, safeJsonParse, hasProAccess } from '@/lib/utils';
@@ -327,9 +326,9 @@ export async function POST(request: NextRequest) {
     // Get user from session
     let sessionUserId = null;
     try {
-      const { isAuthenticated, claims } = await getLogtoContext(logtoConfig);
-      if (isAuthenticated && claims) {
-        sessionUserId = claims.sub;
+      const { userId } = await auth();
+      if (userId) {
+        sessionUserId = userId;
       }
     } catch (authError) {
       // Ignore auth error for API keys

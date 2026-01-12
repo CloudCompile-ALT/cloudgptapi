@@ -20,7 +20,7 @@ import {
 } from 'lucide-react';
 import { CHAT_MODELS, IMAGE_MODELS, VIDEO_MODELS, PREMIUM_MODELS } from '@/lib/providers';
 import { cn, hasProAccess, hasVideoAccess } from '@/lib/utils';
-import { useLogto } from '@logto/react';
+import { useUser } from '@clerk/nextjs';
 import Link from 'next/link';
 
 type Mode = 'chat' | 'image' | 'video';
@@ -60,7 +60,7 @@ function useCountdown(targetDate?: string) {
 }
 
 export default function PlaygroundPage() {
-  const { isAuthenticated } = useLogto();
+  const { isSignedIn } = useUser();
   const [profile, setProfile] = useState<{ plan: string } | null>(null);
   const [mode, setMode] = useState<Mode>('chat');
   const [selectedModel, setSelectedModel] = useState(CHAT_MODELS[0].id);
@@ -78,7 +78,7 @@ export default function PlaygroundPage() {
   const scrollRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-    if (isAuthenticated) {
+    if (isSignedIn) {
       fetch('/api/profile')
         .then(res => res.json())
         .then(data => {
@@ -88,7 +88,7 @@ export default function PlaygroundPage() {
         })
         .catch(err => console.error('Failed to fetch user profile:', err));
     }
-  }, [isAuthenticated]);
+  }, [isSignedIn]);
 
   useEffect(() => {
     if (scrollRef.current) {

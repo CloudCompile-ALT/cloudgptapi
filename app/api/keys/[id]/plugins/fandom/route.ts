@@ -1,5 +1,4 @@
-import { getLogtoContext } from '@logto/next/server-actions';
-import { logtoConfig } from '@/lib/logto';
+import { auth } from '@clerk/nextjs/server';
 import { NextRequest, NextResponse } from 'next/server';
 import { supabaseAdmin } from '@/lib/supabase';
 
@@ -11,17 +10,15 @@ const REMOTE_PLUGIN_URL = 'https://king-dried-favors-latter.trycloudflare.com';
  */
 export async function GET(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const { isAuthenticated, claims } = await getLogtoContext(logtoConfig);
-    const { id: keyId } = params;
+    const { userId } = await auth();
+    const { id: keyId } = await params;
 
-    if (!isAuthenticated || !claims) {
+    if (!userId) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
-
-    const userId = claims.sub;
 
     // Verify key ownership in Supabase first
     const { data: keyData, error: keyError } = await supabaseAdmin
@@ -59,17 +56,15 @@ export async function GET(
  */
 export async function PATCH(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const { isAuthenticated, claims } = await getLogtoContext(logtoConfig);
-    const { id: keyId } = params;
+    const { userId } = await auth();
+    const { id: keyId } = await params;
 
-    if (!isAuthenticated || !claims) {
+    if (!userId) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
-
-    const userId = claims.sub;
 
     // Verify key ownership in Supabase first
     const { data: keyData, error: keyError } = await supabaseAdmin
