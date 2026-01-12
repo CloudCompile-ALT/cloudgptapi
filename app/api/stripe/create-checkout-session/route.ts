@@ -1,4 +1,4 @@
-import { auth } from '@clerk/nextjs/server';
+import { auth, currentUser } from '@clerk/nextjs/server';
 import { NextResponse } from 'next/server';
 import { stripe } from '@/lib/stripe';
 
@@ -10,9 +10,7 @@ export async function POST(req: Request) {
       return new NextResponse('Unauthorized', { status: 401 });
     }
 
-    // For Clerk, we need to get the user's email separately
-    // We can use currentUser() from @clerk/nextjs/server
-    const { currentUser } = await import('@clerk/nextjs/server');
+    // Get the user's email from Clerk
     const user = await currentUser();
     const userEmail = user?.emailAddresses[0]?.emailAddress;
 

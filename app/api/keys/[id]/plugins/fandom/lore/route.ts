@@ -19,7 +19,7 @@ async function verifyOwnership(userId: string | null, keyId: string) {
 
 export async function GET(
   req: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   const { id: keyId } = await params;
   
@@ -48,7 +48,7 @@ export async function GET(
 
 export async function POST(
   req: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   const { id: keyId } = await params;
   
@@ -80,7 +80,7 @@ export async function POST(
 
 export async function DELETE(
   req: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   const { id: keyId } = await params;
   const { searchParams } = new URL(req.url);

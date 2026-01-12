@@ -11,12 +11,12 @@ export async function getCurrentUserId(): Promise<string | null> {
 
 /**
  * Require authentication and return the user ID
- * @throws Error if not authenticated
+ * @throws Error with descriptive message if not authenticated
  */
 export async function requireAuth(): Promise<string> {
   const userId = await getCurrentUserId();
   if (!userId) {
-    throw new Error('Unauthorized');
+    throw new Error('Authentication required: No valid user session found');
   }
   return userId;
 }
