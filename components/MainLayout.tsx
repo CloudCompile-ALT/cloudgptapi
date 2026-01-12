@@ -67,7 +67,7 @@ function Header({
         <div className="flex items-center gap-4">
           {!isAuthenticated ? (
             <button 
-              onClick={() => signIn(`${window.location.origin}/api/logto/sign-in-callback`)}
+              onClick={() => window.location.assign('/api/logto/sign-in')}
               className="rounded-lg bg-primary px-4 py-2 text-sm font-semibold text-white shadow-md shadow-primary/20 hover:bg-primary/90 transition-all"
             >
               Sign In
@@ -76,7 +76,7 @@ function Header({
             <div className="flex items-center gap-4">
               <UserStatus />
               <button 
-                onClick={() => signOut(window.location.origin)}
+                onClick={() => window.location.assign('/api/logto/sign-out')}
                 className="text-sm font-medium text-slate-600 hover:text-primary transition-colors"
               >
                 Sign Out

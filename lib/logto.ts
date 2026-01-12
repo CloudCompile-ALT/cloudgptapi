@@ -18,5 +18,5 @@ export const logtoConfig: LogtoNextConfig = {
   // In production (Vercel/Cloudflare), always use secure cookies.
   // If testing locally via http://localhost:3000, cookieSecure will be false.
   cookieSecure: process.env.NODE_ENV === 'production' && !getBaseUrl().includes('localhost'),
-  scopes: ['email', 'profile'],
+  scopes: ['email', 'profile', 'openid', 'offline_access'],
 };
