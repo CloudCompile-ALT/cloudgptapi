@@ -26,10 +26,7 @@ export async function SyncUser() {
     }
   } catch (err) {
     // During build/prerendering, this is expected to fail
-    // Only log in non-build environments
-    if (process.env.NODE_ENV !== 'production' || typeof window !== 'undefined') {
-      console.error('Failed to get Logto context:', err);
-    }
+    // Silently ignore - authentication will be handled at runtime
   }
 
   return null;

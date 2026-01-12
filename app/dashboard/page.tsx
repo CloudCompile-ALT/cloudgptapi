@@ -1,7 +1,7 @@
 'use client';
 
-// Note: This is a client component, so it doesn't need the dynamic export.
-// The dynamic rendering is controlled by the parent layout or by the API routes it calls.
+// Note: This is a client component that handles authentication state on the client side.
+// API routes called by this component use Logto for server-side authentication.
 
 import { useState, useEffect } from 'react';
 import { 
