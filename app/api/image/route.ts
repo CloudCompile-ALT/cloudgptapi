@@ -326,9 +326,9 @@ export async function POST(request: NextRequest) {
     // Get user from session
     let sessionUserId = null;
     try {
-      const { isAuthenticated, claims } = await getLogtoContext(logtoConfig);
-      if (isAuthenticated && claims) {
-        sessionUserId = claims.sub;
+      const { userId } = await auth();
+      if (userId) {
+        sessionUserId = userId;
       }
     } catch (authError) {
       // Ignore auth error for API keys
