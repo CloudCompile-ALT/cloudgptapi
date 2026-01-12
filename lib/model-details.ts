@@ -13,6 +13,7 @@ export interface ModelDetails {
   technicalSpecs?: {
     contextWindow?: string;
     maxTokens?: string;
+    maxOutputTokens?: string;
     trainingData?: string;
     releaseDate?: string;
     architecture?: string;

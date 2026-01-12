@@ -1,15 +1,18 @@
-import { auth, currentUser } from '@clerk/nextjs/server';
+import { getLogtoContext } from '@logto/next/server-actions';
+import { logtoConfig } from '@/lib/logto';
 import { NextRequest, NextResponse } from 'next/server';
 import { generateApiKey } from '@/lib/api-keys';
 import { supabaseAdmin } from '@/lib/supabase';
 
 export async function GET() {
   try {
-    const { userId } = await auth();
+    const { isAuthenticated, claims } = await getLogtoContext(logtoConfig);
     
-    if (!userId) {
+    if (!isAuthenticated || !claims) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
+
+    const userId = claims.sub;
 
     // Note: User sync is handled by the SyncUser component in the root layout
     // No need to sync here to avoid duplicate webhook notifications
@@ -53,11 +56,13 @@ export async function GET() {
 
 export async function POST(request: NextRequest) {
   try {
-    const { userId } = await auth();
+    const { isAuthenticated, claims } = await getLogtoContext(logtoConfig);
     
-    if (!userId) {
+    if (!isAuthenticated || !claims) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
+
+    const userId = claims.sub;
 
     const body = await request.json();
     const name = body.name || 'Unnamed Key';
@@ -148,11 +153,13 @@ export async function POST(request: NextRequest) {
 }
 
 export async function DELETE(request: NextRequest) {
-  const { userId } = await auth();
+  const { isAuthenticated, claims } = await getLogtoContext(logtoConfig);
   
-  if (!userId) {
+  if (!isAuthenticated || !claims) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   }
+
+  const userId = claims.sub;
 
   const body = await request.json();
   const keyId = body.id;

@@ -21,9 +21,11 @@ import {
   BarChart3,
   Globe,
   Lock,
-  Zap
+  Zap,
+  BookOpen
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import Link from 'next/link';
 
 interface ApiKey {
   id: string;
@@ -131,34 +133,34 @@ export default function Dashboard() {
   );
 
   return (
-    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10 space-y-10 animate-in fade-in duration-700">
+    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-10 space-y-8 sm:space-y-10 animate-in fade-in duration-700">
       {/* New Key Success Modal */}
       {createdKey && (
         <div className="fixed inset-0 bg-slate-950/80 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-          <div className="bg-white dark:bg-slate-900 border border-border rounded-[2.5rem] p-8 max-w-lg w-full shadow-2xl animate-in zoom-in-95 duration-300">
-            <div className="h-16 w-16 bg-primary/10 rounded-2xl flex items-center justify-center text-primary mb-6">
-              <Shield className="h-8 w-8" />
+          <div className="bg-white dark:bg-slate-900 border border-border rounded-3xl sm:rounded-[2.5rem] p-6 sm:p-8 max-w-lg w-full shadow-2xl animate-in zoom-in-95 duration-300">
+            <div className="h-12 w-12 sm:h-16 sm:w-16 bg-primary/10 rounded-xl sm:rounded-2xl flex items-center justify-center text-primary mb-4 sm:mb-6">
+              <Shield className="h-6 w-6 sm:h-8 sm:w-8" />
             </div>
-            <h2 className="text-2xl font-black tracking-tight mb-2">API Key Created!</h2>
-            <p className="text-slate-500 dark:text-slate-400 text-sm font-medium mb-6">
+            <h2 className="text-xl sm:text-2xl font-black tracking-tight mb-2">API Key Created!</h2>
+            <p className="text-slate-500 dark:text-slate-400 text-xs sm:text-sm font-medium mb-4 sm:mb-6">
               {createdKey.message}
             </p>
             
-            <div className="bg-slate-100 dark:bg-slate-800 rounded-2xl p-4 mb-6 flex items-center justify-between gap-4 border border-border group">
-              <code className="text-sm font-mono font-bold break-all text-primary">
+            <div className="bg-slate-100 dark:bg-slate-800 rounded-xl sm:rounded-2xl p-3 sm:p-4 mb-4 sm:mb-6 flex items-center justify-between gap-3 sm:gap-4 border border-border group">
+              <code className="text-xs sm:text-sm font-mono font-bold break-all text-primary">
                 {createdKey.key}
               </code>
               <button 
                 onClick={() => copyToClipboard(createdKey.key, 'created')}
-                className="shrink-0 p-2.5 rounded-xl bg-white dark:bg-slate-700 border border-border hover:bg-muted transition-all shadow-sm"
+                className="shrink-0 p-2 rounded-lg sm:p-2.5 sm:rounded-xl bg-white dark:bg-slate-700 border border-border hover:bg-muted transition-all shadow-sm"
               >
-                {copiedId === 'created' ? <Check className="h-4 w-4 text-emerald-500" /> : <Copy className="h-4 w-4" />}
+                {copiedId === 'created' ? <Check className="h-3.5 w-3.5 sm:h-4 sm:w-4 text-emerald-500" /> : <Copy className="h-3.5 w-3.5 sm:h-4 sm:w-4" />}
               </button>
             </div>
 
             <button 
               onClick={() => setCreatedKey(null)}
-              className="w-full bg-slate-900 dark:bg-white text-white dark:text-slate-900 font-black py-4 rounded-2xl hover:scale-[1.02] active:scale-[0.98] transition-all shadow-lg"
+              className="w-full bg-slate-900 dark:bg-white text-white dark:text-slate-900 font-black py-3 sm:py-4 rounded-xl sm:rounded-2xl hover:scale-[1.02] active:scale-[0.98] transition-all shadow-lg text-sm sm:text-base"
             >
               I've saved it securely
             </button>
@@ -168,106 +170,115 @@ export default function Dashboard() {
 
       {/* Welcome Header */}
       <div className="flex flex-col md:flex-row md:items-end justify-between gap-6">
-        <div>
-          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-primary/10 text-primary text-xs font-bold tracking-wider uppercase mb-4 border border-primary/20">
-            <Zap className="h-3.5 w-3.5 fill-current" />
+        <div className="text-center sm:text-left">
+          <div className="inline-flex items-center gap-2 px-2.5 py-1 rounded-full bg-primary/10 text-primary text-[10px] sm:text-xs font-bold tracking-wider uppercase mb-3 sm:mb-4 border border-primary/20">
+            <Zap className="h-3 w-3 sm:h-3.5 sm:w-3.5 fill-current" />
             <span>Developer Console</span>
           </div>
-          <h1 className="text-4xl font-black tracking-tighter">API Management</h1>
-          <p className="text-slate-500 dark:text-slate-400 mt-2 font-medium">Create and manage access keys for your applications.</p>
+          <h1 className="text-2xl sm:text-3xl md:text-4xl font-black tracking-tighter">API Management</h1>
+          <p className="text-slate-500 dark:text-slate-400 mt-1 sm:mt-2 font-medium text-xs sm:text-sm md:text-base">Create and manage access keys for your applications.</p>
         </div>
         <div className="flex gap-3">
-          <div className="flex items-center gap-4 bg-white dark:bg-slate-900 border border-border p-4 rounded-2xl shadow-sm">
-            <div className="h-10 w-10 rounded-xl bg-emerald-500/10 flex items-center justify-center text-emerald-500">
-              <Activity className="h-5 w-5" />
+          <div className="flex items-center gap-3 sm:gap-4 bg-white dark:bg-slate-900 border border-border p-2.5 sm:p-4 rounded-xl sm:rounded-2xl shadow-sm w-full sm:w-auto">
+            <div className="h-8 w-8 sm:h-10 sm:w-10 rounded-lg sm:rounded-xl bg-emerald-500/10 flex items-center justify-center text-emerald-500 shrink-0">
+              <Activity className="h-4 w-4 sm:h-5 sm:w-5" />
             </div>
             <div>
-              <div className="text-[10px] uppercase tracking-widest text-slate-400 font-black">Status</div>
-              <div className="text-sm font-bold">Systems Operational</div>
+              <div className="text-[9px] sm:text-[10px] uppercase tracking-widest text-slate-400 font-black">Status</div>
+              <div className="text-xs sm:text-sm font-bold">Systems Operational</div>
             </div>
           </div>
         </div>
       </div>
 
-      <div className="grid lg:grid-cols-3 gap-8">
+      <div className="grid lg:grid-cols-3 gap-6 sm:gap-8">
         {/* Main Content: Key List */}
         <div className="lg:col-span-2 space-y-6">
-          <div className="bg-white dark:bg-slate-900 border border-border rounded-[2rem] shadow-sm overflow-hidden">
-            <div className="p-8 border-b border-border flex items-center justify-between gap-4">
-              <div className="relative flex-1 max-w-md">
-                <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
+          <div className="bg-white dark:bg-slate-900 border border-border rounded-2xl sm:rounded-[2rem] shadow-sm overflow-hidden">
+            <div className="p-4 sm:p-8 border-b border-border flex items-center justify-between gap-3 sm:gap-4">
+              <div className="relative flex-1">
+                <Search className="absolute left-3 sm:left-4 top-1/2 -translate-y-1/2 h-3.5 w-3.5 sm:h-4 sm:w-4 text-slate-400" />
                 <input 
                   type="text" 
                   placeholder="Search keys..." 
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
-                  className="w-full bg-muted/50 border border-border rounded-xl pl-11 pr-4 py-2.5 text-sm font-medium focus:outline-none focus:ring-2 focus:ring-primary/20 transition-all"
+                  className="w-full bg-muted/50 border border-border rounded-lg sm:rounded-xl pl-9 sm:pl-11 pr-3 sm:pr-4 py-2 sm:py-2.5 text-base font-medium focus:outline-none focus:ring-2 focus:ring-primary/20 transition-all"
                 />
               </div>
               <button 
                 onClick={fetchKeys}
-                className="p-2.5 rounded-xl border border-border hover:bg-muted transition-colors"
+                className="p-2 sm:p-2.5 rounded-lg sm:rounded-xl border border-border hover:bg-muted transition-colors shrink-0"
                 title="Refresh keys"
               >
-                <RefreshCcw className={cn("h-4 w-4", loading && "animate-spin")} />
+                <RefreshCcw className={cn("h-3.5 w-3.5 sm:h-4 sm:w-4", loading && "animate-spin")} />
               </button>
             </div>
 
             <div className="divide-y divide-border">
               {filteredKeys.length > 0 ? (
                 filteredKeys.map((key) => (
-                  <div key={key.id} className="p-8 hover:bg-muted/30 transition-colors group">
-                    <div className="flex items-start justify-between gap-4">
-                      <div className="flex gap-4">
-                        <div className="h-12 w-12 rounded-2xl bg-slate-100 dark:bg-slate-800 flex items-center justify-center text-slate-400 group-hover:bg-primary/10 group-hover:text-primary transition-colors">
-                          <Key className="h-6 w-6" />
+                  <div key={key.id} className="p-4 sm:p-8 hover:bg-muted/30 transition-colors group">
+                    <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-3 sm:gap-6">
+                      <div className="flex gap-3 sm:gap-4">
+                        <div className="h-9 w-9 sm:h-12 sm:w-12 rounded-lg sm:rounded-2xl bg-slate-100 dark:bg-slate-800 flex items-center justify-center text-slate-400 group-hover:bg-primary/10 group-hover:text-primary transition-colors shrink-0">
+                          <Key className="h-4 w-4 sm:h-6 sm:w-6" />
                         </div>
-                        <div>
-                          <h3 className="font-black text-lg tracking-tight">{key.name}</h3>
-                          <div className="flex items-center gap-3 mt-1">
-                            <code className="text-xs font-mono text-slate-500 bg-slate-100 dark:bg-slate-800 px-2 py-0.5 rounded uppercase tracking-wider">
+                        <div className="min-w-0">
+                          <h3 className="font-black text-sm sm:text-lg tracking-tight truncate">{key.name}</h3>
+                          <div className="flex items-center gap-2 sm:gap-3 mt-0.5 sm:mt-1">
+                            <code className="text-[9px] sm:text-[10px] font-mono text-slate-500 bg-slate-100 dark:bg-slate-800 px-1.5 sm:px-2 py-0.5 rounded uppercase tracking-wider truncate max-w-[80px] xs:max-w-[120px] sm:max-w-none">
                               {key.keyPreview}
                             </code>
                             {key.keyPreview.includes('...') ? (
-                              <div className="group/hint relative">
-                                <Lock className="h-3 w-3 text-slate-300" />
-                                <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 px-2 py-1 bg-slate-800 text-white text-[10px] font-bold rounded opacity-0 group-hover/hint:opacity-100 transition-opacity whitespace-nowrap pointer-events-none">
+                              <div className="group/hint relative shrink-0">
+                                <Lock className="h-2.5 w-2.5 sm:h-3 sm:w-3 text-slate-300" />
+                                <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 px-2 py-1 bg-slate-800 text-white text-[9px] sm:text-[10px] font-bold rounded opacity-0 group-hover/hint:opacity-100 transition-opacity whitespace-nowrap pointer-events-none z-20">
                                   Full key hidden for security
                                 </div>
                               </div>
                             ) : (
                               <button 
                                 onClick={() => copyToClipboard(key.keyPreview, key.id)}
-                                className="text-slate-400 hover:text-primary transition-colors"
+                                className="text-slate-400 hover:text-primary transition-colors shrink-0"
                                 title="Copy API key"
                               >
-                                {copiedId === key.id ? <Check className="h-3.5 w-3.5" /> : <Copy className="h-3.5 w-3.5" />}
+                                {copiedId === key.id ? <Check className="h-2.5 w-2.5 sm:h-3 sm:w-3" /> : <Copy className="h-2.5 w-2.5 sm:h-3 sm:w-3" />}
                               </button>
                             )}
                           </div>
                         </div>
                       </div>
-                      <div className="flex flex-col items-end gap-2">
-                        <span className="text-[10px] font-black uppercase tracking-widest text-slate-400">
-                          Last used {key.lastUsedAt ? new Date(key.lastUsedAt).toLocaleDateString() : 'Never'}
+                      <div className="flex flex-row sm:flex-col items-center sm:items-end justify-between sm:justify-start gap-4 sm:gap-2 pt-3 sm:pt-0 border-t sm:border-t-0 border-border sm:border-none">
+                        <span className="text-[9px] sm:text-[10px] font-black uppercase tracking-widest text-slate-400">
+                          {key.lastUsedAt ? `Used ${new Date(key.lastUsedAt).toLocaleDateString()}` : 'Never used'}
                         </span>
-                        <button 
-                          onClick={() => deleteKey(key.id)}
-                          className="p-2 rounded-lg text-slate-300 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-950/30 transition-all opacity-0 group-hover:opacity-100"
-                        >
-                          <Trash2 className="h-4 w-4" />
-                        </button>
+                        <div className="flex items-center gap-2">
+                          <Link 
+                            href={`/dashboard/plugins/${key.id}`}
+                            className="flex items-center gap-1 sm:gap-1.5 px-2.5 sm:px-3 py-1 sm:py-1.5 rounded-lg bg-primary/10 text-primary text-[9px] sm:text-[10px] font-black uppercase tracking-widest hover:bg-primary/20 transition-all lg:opacity-0 lg:group-hover:opacity-100 border border-primary/10"
+                          >
+                            <BookOpen className="h-3 w-3 sm:h-3.5 sm:w-3.5" />
+                            Plugins
+                          </Link>
+                          <button 
+                            onClick={() => deleteKey(key.id)}
+                            className="p-1.5 sm:p-2 rounded-lg text-slate-400 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-950/30 transition-all lg:opacity-0 lg:group-hover:opacity-100"
+                          >
+                            <Trash2 className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
+                          </button>
+                        </div>
                       </div>
                     </div>
                   </div>
                 ))
               ) : (
-                <div className="p-20 text-center">
-                  <div className="h-16 w-16 bg-muted rounded-3xl flex items-center justify-center text-slate-300 mx-auto mb-6">
-                    <Key className="h-8 w-8" />
+                <div className="p-8 sm:p-20 text-center">
+                  <div className="h-12 w-12 sm:h-16 sm:w-16 bg-muted rounded-2xl sm:rounded-3xl flex items-center justify-center text-slate-300 mx-auto mb-4 sm:mb-6">
+                    <Key className="h-6 w-6 sm:h-8 sm:w-8" />
                   </div>
-                  <h3 className="text-xl font-black tracking-tight mb-2">No API keys found</h3>
-                  <p className="text-slate-400 max-w-xs mx-auto text-sm font-medium">
+                  <h3 className="text-lg sm:text-xl font-black tracking-tight mb-2">No API keys found</h3>
+                  <p className="text-slate-400 max-w-xs mx-auto text-xs sm:text-sm font-medium">
                     {searchQuery ? "No keys match your search criteria." : "Create your first API key to start using CloudGPT."}
                   </p>
                 </div>
@@ -278,30 +289,30 @@ export default function Dashboard() {
 
         {/* Sidebar: Create Key & Info */}
         <div className="space-y-6">
-          <div className="bg-slate-950 text-white rounded-[2rem] p-8 shadow-2xl shadow-primary/10 relative overflow-hidden group">
+          <div className="bg-slate-950 text-white rounded-2xl sm:rounded-[2rem] p-6 sm:p-8 shadow-2xl shadow-primary/10 relative overflow-hidden group">
             <div className="absolute top-0 right-0 w-32 h-32 bg-primary/20 blur-3xl rounded-full -mr-16 -mt-16 group-hover:bg-primary/30 transition-all duration-700" />
             <div className="relative z-10">
-              <h3 className="text-xl font-black tracking-tighter mb-6 flex items-center gap-3">
-                <Plus className="h-5 w-5 text-primary" />
+              <h3 className="text-lg sm:text-xl font-black tracking-tighter mb-4 sm:mb-6 flex items-center gap-3">
+                <Plus className="h-4 w-4 sm:h-5 sm:w-5 text-primary" />
                 New API Key
               </h3>
-              <div className="space-y-4">
+              <div className="space-y-3 sm:space-y-4">
                 <input 
                   type="text" 
                   placeholder="Production App Key..." 
                   value={newKeyName}
                   onChange={(e) => setNewKeyName(e.target.value)}
-                  className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-primary/40 transition-all"
+                  className="w-full bg-white/5 border border-white/10 rounded-lg sm:rounded-xl px-4 py-2.5 sm:py-3 text-base focus:outline-none focus:ring-2 focus:ring-primary/40 transition-all"
                 />
                 <button 
                   onClick={createKey}
-                  className="w-full bg-primary text-white font-black py-3 rounded-xl shadow-lg shadow-primary/20 hover:scale-[1.02] active:scale-[0.98] transition-all"
+                  className="w-full bg-primary text-white font-black py-2.5 sm:py-3 rounded-lg sm:rounded-xl shadow-lg shadow-primary/20 hover:scale-[1.02] active:scale-[0.98] transition-all text-xs sm:text-sm"
                 >
                   Generate Key
                 </button>
                 {error && (
-                  <div className="flex items-center gap-2 text-red-400 text-xs font-bold bg-red-500/10 p-3 rounded-lg border border-red-500/20">
-                    <AlertCircle className="h-3.5 w-3.5" />
+                  <div className="flex items-center gap-2 text-red-400 text-[10px] sm:text-xs font-bold bg-red-500/10 p-2.5 sm:p-3 rounded-lg border border-red-500/20">
+                    <AlertCircle className="h-3 w-3 sm:h-3.5 sm:w-3.5" />
                     {error}
                   </div>
                 )}
@@ -309,20 +320,20 @@ export default function Dashboard() {
             </div>
           </div>
 
-          <div className="bg-white dark:bg-slate-900 border border-border rounded-[2rem] p-8">
-            <h3 className="text-sm font-black uppercase tracking-[0.2em] text-slate-400 mb-6">Security Tips</h3>
-            <ul className="space-y-4">
+          <div className="bg-white dark:bg-slate-900 border border-border rounded-2xl sm:rounded-[2rem] p-6 sm:p-8">
+            <h3 className="text-[10px] sm:text-sm font-black uppercase tracking-[0.2em] text-slate-400 mb-4 sm:mb-6">Security Tips</h3>
+            <ul className="space-y-3 sm:space-y-4">
               <li className="flex gap-3">
-                <div className="h-5 w-5 rounded bg-amber-500/10 flex items-center justify-center text-amber-500 shrink-0">
-                  <Lock className="h-3 w-3" />
+                <div className="h-4 w-4 sm:h-5 sm:w-5 rounded bg-amber-500/10 flex items-center justify-center text-amber-500 shrink-0">
+                  <Lock className="h-2.5 w-2.5 sm:h-3 sm:w-3" />
                 </div>
-                <p className="text-xs font-medium text-slate-500 leading-relaxed">Never share your API keys or expose them in client-side code.</p>
+                <p className="text-[10px] sm:text-xs font-medium text-slate-500 leading-relaxed">Never share your API keys or expose them in client-side code.</p>
               </li>
               <li className="flex gap-3">
-                <div className="h-5 w-5 rounded bg-primary/10 flex items-center justify-center text-primary shrink-0">
-                  <Shield className="h-3 w-3" />
+                <div className="h-4 w-4 sm:h-5 sm:w-5 rounded bg-primary/10 flex items-center justify-center text-primary shrink-0">
+                  <Shield className="h-2.5 w-2.5 sm:h-3 sm:w-3" />
                 </div>
-                <p className="text-xs font-medium text-slate-500 leading-relaxed">Rotate your keys regularly to maintain high security standards.</p>
+                <p className="text-[10px] sm:text-xs font-medium text-slate-500 leading-relaxed">Rotate your keys regularly to maintain high security standards.</p>
               </li>
             </ul>
           </div>

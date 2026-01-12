@@ -7,9 +7,12 @@ This guide explains how to set up all the required API keys and environment vari
 Create a `.env.local` file in the root of your project (for local development) or configure these in your Vercel project settings.
 
 ```env
-# Clerk Authentication (Required)
-NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY=YOUR_PUBLISHABLE_KEY
-CLERK_SECRET_KEY=YOUR_SECRET_KEY
+# Logto Authentication (Required)
+LOGTO_ENDPOINT=https://your-logto-instance.com
+LOGTO_APP_ID=your_app_id
+LOGTO_APP_SECRET=your_app_secret
+LOGTO_COOKIE_SECRET=your_cookie_secret
+NEXT_PUBLIC_BASE_URL=http://localhost:3000
 
 # AI Provider Keys (At least one recommended)
 POLLINATIONS_API_KEY=your_pollinations_api_key
@@ -21,19 +24,22 @@ MERIDIAN_API_KEY=your_meridian_api_key
 
 ## Setting Up Each Service
 
-### 1. Clerk Authentication (Required)
+### 1. Logto Authentication (Required)
 
-Clerk handles user authentication and account management.
+Logto handles user authentication and account management.
 
-1. Go to [clerk.com](https://clerk.com) and sign up for a free account
-2. Create a new application
-3. In the Clerk Dashboard, go to **[API Keys](https://dashboard.clerk.com/last-active?path=api-keys)**
-4. Copy the **Publishable Key** → `NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY`
-5. Copy the **Secret Key** → `CLERK_SECRET_KEY`
+1. Set up a Logto instance (using Docker or Cloud)
+2. Create a "Next.js (App Router)" application in Logto
+3. In the Logto Dashboard, go to your application details
+4. Copy the **Endpoint** → `LOGTO_ENDPOINT`
+5. Copy the **App ID** → `LOGTO_APP_ID`
+6. Copy the **App Secret** → `LOGTO_APP_SECRET`
+7. Generate a random string for `LOGTO_COOKIE_SECRET`
+8. Set `NEXT_PUBLIC_BASE_URL` to your application's base URL (e.g., `http://localhost:3000` or `https://your-domain.com`)
 
 **Where to put them:**
 - **Local Development**: `.env.local` file
-- **Vercel**: Project Settings → Environment Variables
+- **Deployment**: Environment Variables in your hosting provider (Vercel, etc.)
 
 **Important:** Never commit real keys to version control. Only use placeholder values in code examples.
 
@@ -96,8 +102,11 @@ When deploying to Vercel:
 1. Click the "Deploy to Vercel" button in the README
 2. Connect your GitHub repository
 3. In the deployment configuration, add all environment variables:
-   - `NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY`
-   - `CLERK_SECRET_KEY`
+   - `LOGTO_ENDPOINT`
+   - `LOGTO_APP_ID`
+   - `LOGTO_APP_SECRET`
+   - `LOGTO_COOKIE_SECRET`
+   - `NEXT_PUBLIC_BASE_URL`
    - `POLLINATIONS_API_KEY`
    - `POLLINATIONS_API_KEY_2` (optional, for load distribution)
    - `ROUTEWAY_API_KEY`
@@ -134,13 +143,12 @@ When deploying to Vercel:
 
 ## Troubleshooting
 
-### "Clerk: Missing publishable key"
-- Ensure `NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY` is set
-- Make sure it starts with `pk_`
+### "Logto: Missing configuration"
+- Ensure `LOGTO_ENDPOINT`, `LOGTO_APP_ID`, and `LOGTO_APP_SECRET` are set.
+- Verify `NEXT_PUBLIC_BASE_URL` is correct and matches your Logto redirect URI.
 
-### "Clerk: Invalid secret key"
-- Verify `CLERK_SECRET_KEY` is correct
-- Make sure it starts with `sk_`
+### "Logto: Invalid cookie secret"
+- Ensure `LOGTO_COOKIE_SECRET` is a long, random string.
 
 ### "Rate limit exceeded"
 - You may need to add/upgrade your Pollinations API key
@@ -156,9 +164,12 @@ When deploying to Vercel:
 ```env
 # Copy this file to .env.local and fill in your values
 
-# Clerk (Required)
-NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY=YOUR_PUBLISHABLE_KEY
-CLERK_SECRET_KEY=YOUR_SECRET_KEY
+# Logto (Required)
+LOGTO_ENDPOINT=https://your-logto-instance.com
+LOGTO_APP_ID=your_app_id
+LOGTO_APP_SECRET=your_app_secret
+LOGTO_COOKIE_SECRET=your_cookie_secret
+NEXT_PUBLIC_BASE_URL=http://localhost:3000
 
 # AI Providers (Optional but recommended)
 POLLINATIONS_API_KEY=your_pollinations_key_here

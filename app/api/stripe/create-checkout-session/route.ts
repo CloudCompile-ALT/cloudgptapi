@@ -1,15 +1,18 @@
-import { auth, currentUser } from '@clerk/nextjs/server';
+import { getLogtoContext } from '@logto/next/server-actions';
+import { logtoConfig } from '@/lib/logto';
 import { NextResponse } from 'next/server';
 import { stripe } from '@/lib/stripe';
 
 export async function POST(req: Request) {
   try {
-    const { userId } = await auth();
-    const user = await currentUser();
+    const { isAuthenticated, claims } = await getLogtoContext(logtoConfig);
 
-    if (!userId || !user) {
+    if (!isAuthenticated || !claims) {
       return new NextResponse('Unauthorized', { status: 401 });
     }
+
+    const userId = claims.sub;
+    const userEmail = claims.email;
 
     const body = await req.json();
     const { priceId } = body;
@@ -32,10 +35,10 @@ export async function POST(req: Request) {
       mode: 'subscription',
       success_url: `${baseUrl}/dashboard?success=true`,
       cancel_url: `${baseUrl}/pricing?canceled=true`,
-      customer_email: user.emailAddresses[0].emailAddress,
+      customer_email: userEmail,
       metadata: {
         userId,
-        userEmail: user.emailAddresses[0].emailAddress,
+        userEmail: userEmail,
       },
     });
 

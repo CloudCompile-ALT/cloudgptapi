@@ -1,6 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { auth } from '@clerk/nextjs/server';
+import { getLogtoContext } from '@logto/next/server-actions';
+import { logtoConfig } from '@/lib/logto';
 import { extractApiKey, validateApiKey, trackUsage, checkRateLimit, getRateLimitInfo, checkDailyLimit, getDailyLimitInfo, ApiKey, applyPlanOverride, applyPeakHoursLimit } from '@/lib/api-keys';
+import { runFandomPlugin } from '@/lib/plugins';
 import { CHAT_MODELS, PREMIUM_MODELS } from '@/lib/providers';
 import { getCorsHeaders, getPollinationsApiKey, getPollinationsApiKeys, getClaudeApiKey, getClaudeApiKeys, getOpenRouterApiKey, getOpenRouterApiKeys, getPoeApiKey, getPoeApiKeys, getLizApiKey, getLizApiKeys, safeResponseJson, hasProAccess } from '@/lib/utils';
 import { retrieveMemory, rememberInteraction } from '@/lib/memory';
@@ -16,7 +18,8 @@ import {
   sanitizeErrorText,
   extractCharacterMetadata,
   generateCharacterId,
-  extractUserId
+  extractUserId,
+  estimateTokens
 } from '@/lib/chat-utils';
 
 export const runtime = 'nodejs';
@@ -44,6 +47,7 @@ async function handleStableHordeChat(
   requestId: string,
   limit: number,
   dailyLimit: number,
+  isSystemRequest: boolean,
   characterId?: string
 ): Promise<NextResponse> {
   // '0000000000' is Stable Horde's official anonymous API key for rate-limited access
@@ -126,7 +130,7 @@ async function handleStableHordeChat(
           const generatedText = checkData.generations[0].text || '';
           
           // Track usage
-          if (apiKeyInfo) {
+          if (apiKeyInfo && !isSystemRequest) {
             const model = CHAT_MODELS.find(m => m.id === modelId);
             const usageWeight = model?.usageWeight || 1;
             await trackUsage(apiKeyInfo.id, apiKeyInfo.userId, modelId, 'chat', body.messages, usageWeight);
@@ -134,7 +138,9 @@ async function handleStableHordeChat(
           
           // Remember interaction
           const lastUserMessage = body.messages[body.messages.length - 1]?.content || '';
-          if (userId && lastUserMessage && body.use_memory) {
+          const shouldRemember = body.use_memory || apiKeyInfo?.fandomPluginEnabled;
+          
+          if (userId && lastUserMessage && shouldRemember) {
             rememberInteraction(lastUserMessage, generatedText.trim(), userId, characterId).catch(err =>
               console.error('Failed to remember Stable Horde interaction:', err)
             );
@@ -254,11 +260,13 @@ export async function POST(request: NextRequest) {
     // Get user from session (for website users)
     let sessionUserId = null;
     try {
-      const authData = await auth();
-      sessionUserId = authData.userId;
-      console.log(`[${requestId}] Session User ID: ${sessionUserId}`);
+      const { isAuthenticated, claims } = await getLogtoContext(logtoConfig);
+      if (isAuthenticated && claims) {
+        sessionUserId = claims.sub;
+        console.log(`[${requestId}] Session User ID: ${sessionUserId}`);
+      }
     } catch (authError) {
-      console.log(`[${requestId}] Clerk auth() skipped or failed (expected for API keys)`);
+      console.log(`[${requestId}] Logto context skipped or failed (expected for API keys)`);
     }
 
     // Extract and validate API key (for API users)
@@ -319,12 +327,16 @@ export async function POST(request: NextRequest) {
       limit = apiKeyInfo.rateLimit;
     }
     
-    // Apply peak hours reduction (5 PM - 5 AM UTC): 50% reduction for all users
+    // Apply peak hours reduction (5 PM - 5 AM UTC): 50% reduction for RPM only
+    // We don't reduce daily limit to avoid locking out users who already used their quota
     limit = applyPeakHoursLimit(limit);
-    dailyLimit = applyPeakHoursLimit(dailyLimit);
+    // dailyLimit remains unchanged during peak hours
     
-    // Check Daily Limit First
-    if (!await checkDailyLimit(effectiveKey, dailyLimit, apiKeyInfo?.id)) {
+    // VPS Bypass: Don't count requests from our own VPS against RPD
+    const isSystemRequest = clientIp === '157.151.169.121';
+    
+    // Check Daily Limit First (Skip for internal system requests)
+    if (!isSystemRequest && !await checkDailyLimit(effectiveKey, dailyLimit, apiKeyInfo?.id)) {
       const dailyInfo = await getDailyLimitInfo(effectiveKey, dailyLimit, apiKeyInfo?.id);
       console.warn(`[${requestId}] Daily limit exceeded for key: ${effectiveKey.substring(0, 10)}...`);
       return NextResponse.json(
@@ -347,7 +359,7 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    if (!await checkRateLimit(effectiveKey, limit, 'chat')) {
+    if (!isSystemRequest && !await checkRateLimit(effectiveKey, limit, 'chat')) {
       const rateLimitInfo = await getRateLimitInfo(effectiveKey, limit, 'chat');
       const dailyLimitInfo = await getDailyLimitInfo(effectiveKey, dailyLimit, apiKeyInfo?.id);
       
@@ -474,12 +486,12 @@ export async function POST(request: NextRequest) {
     let memoryContext = '';
     
     try {
-      // Only use memory for supported models or if explicitly requested
-      // We prioritize gemini-large and claude as requested
+      // Only use memory for supported models, if explicitly requested, or if Fandom (Lore Library) plugin is enabled
       const isGeminiLarge = modelId === 'gemini-large';
       const isClaude = modelId.startsWith('claude');
+      const isFandomEnabled = apiKeyInfo?.fandomPluginEnabled || false;
       
-      if (isGeminiLarge || isClaude || body.use_memory) {
+      if (isGeminiLarge || isClaude || body.use_memory || isFandomEnabled) {
         memoryContext = await retrieveMemory(lastMessage, userId, characterId);
         
         // Build the optimization prompt (concise mode + memory)
@@ -500,23 +512,88 @@ export async function POST(request: NextRequest) {
 
         if (optimizationPrompt) {
           // Inject context into messages
-          const systemMessageIndex = body.messages.findIndex((m: any) => m.role === 'system');
+          const isGemini = modelId.includes('gemini');
           
-          if (systemMessageIndex !== -1) {
-            // Cap existing system message if it's too long to prevent model freeze
-            const existingContent = body.messages[systemMessageIndex].content;
-            if (existingContent.length > 5000) {
-              body.messages[systemMessageIndex].content = existingContent.substring(0, 5000) + '... [Original system prompt truncated for performance]';
+          if (isGemini) {
+            console.log(`[${requestId}] ADAPTIVE: Injecting memory/optimization as user context for Gemini.`);
+            // For Gemini, we find the first user message and prepend the context there,
+            // or add it as a separate user message if no user message exists yet.
+            const firstUserIndex = body.messages.findIndex((m: any) => m.role === 'user');
+            if (firstUserIndex !== -1) {
+              body.messages[firstUserIndex].content = `[Context]: ${optimizationPrompt}\n\n${body.messages[firstUserIndex].content}`;
+            } else {
+              body.messages.push({
+                role: 'user',
+                content: `[Context]: ${optimizationPrompt}`
+              });
             }
-            body.messages[systemMessageIndex].content += optimizationPrompt;
           } else {
-            body.messages.unshift({
-              role: 'system',
-              content: `You are a helpful assistant with per-character persistent memory.${optimizationPrompt}`
-            });
+            const systemMessageIndex = body.messages.findIndex((m: any) => m.role === 'system');
+            
+            if (systemMessageIndex !== -1) {
+              // Cap existing system message if it's too long to prevent model freeze
+              const existingContent = body.messages[systemMessageIndex].content;
+              if (existingContent.length > 5000) {
+                body.messages[systemMessageIndex].content = existingContent.substring(0, 5000) + '... [Original system prompt truncated for performance]';
+              }
+              body.messages[systemMessageIndex].content += optimizationPrompt;
+            } else {
+              body.messages.unshift({
+                role: 'system',
+                content: `You are a helpful assistant with per-character persistent memory.${optimizationPrompt}`
+              });
+            }
           }
         }
       }
+
+      // --- Remote Fandom Knowledge Plugin ---
+      // The VPS service now handles the check for whether the plugin is enabled
+      // and performs real scraping of fandom/wiki data.
+      console.log(`[${requestId}] Running Remote Fandom Plugin for key: ${apiKeyInfo?.id || 'unknown'}`);
+      const originalMessages = [...body.messages];
+      
+      body.messages = await runFandomPlugin(body.messages, apiKeyInfo?.fandomSettings as any, apiKeyInfo?.id, modelId);
+      
+      // Model-Adaptive Plugin Injection Logic:
+      // If lore was injected, we may need to adjust the message roles for specific models
+      if (body.messages.length > originalMessages.length) {
+        console.log(`[${requestId}] Fandom Knowledge Plugin injected lore from remote VPS.`);
+        
+        const isGemini = modelId.includes('gemini');
+        if (isGemini) {
+          // Gemini is sensitive to multiple system messages or system messages in the middle.
+          // We convert newly added system messages to user-visible context notes.
+          body.messages = body.messages.map((msg: any, idx: number) => {
+            // If this message was NOT in the original array and is a system message
+            const isNew = !originalMessages.some(orig => orig.role === msg.role && orig.content === msg.content);
+            if (isNew && msg.role === 'system') {
+              console.log(`[${requestId}] ADAPTIVE: Converting injected system message to user context for Gemini.`);
+              
+              // Lore Compression: Gemini models perform better with shorter context notes.
+              // We use a token-aware approach to ensure the prompt stays within stable limits.
+              let content = msg.content;
+              const loreTokens = estimateTokens(content);
+              const maxLoreTokens = 800; // ~3200 chars, but safer to use token estimation
+              
+              if (loreTokens > maxLoreTokens) {
+                console.log(`[${requestId}] ADAPTIVE: Compressing long lore snippet (${loreTokens} tokens) for Gemini stability.`);
+                // Keep only the first ~800 tokens worth of content
+                const targetCharCount = maxLoreTokens * 4;
+                content = content.substring(0, targetCharCount) + '... [Lore truncated for stability]';
+              }
+
+              return {
+                role: 'user',
+                content: `[Knowledge Context]: ${content}\n\nPlease use the above information to inform your response.`
+              };
+            }
+            return msg;
+          });
+        }
+      }
+      // ------------------------------------------
+
     } catch (memError) {
       console.error('Memory retrieval failed:', memError);
     }
@@ -651,7 +728,7 @@ export async function POST(request: NextRequest) {
       }
     } else if (model.provider === 'stablehorde') {
       // Handle Stable Horde text generation
-      return await handleStableHordeChat(body, modelId, apiKeyInfo, userId, effectiveKey, requestId, limit, dailyLimit, characterId);
+      return await handleStableHordeChat(body, modelId, apiKeyInfo, userId, effectiveKey, requestId, limit, dailyLimit, isSystemRequest, characterId);
     } else {
       providerUrl = `${PROVIDER_URLS.pollinations}/v1/chat/completions`;
       providerApiKey = getPollinationsApiKey();
@@ -725,17 +802,36 @@ export async function POST(request: NextRequest) {
       // if the last message is an assistant message.
       if (isGeminiModel) {
         let poppedCount = 0;
+        let lastPoppedContent = '';
+        
         while (processedMessages.length > 0 && processedMessages[processedMessages.length - 1].role === 'assistant') {
           const lastMsg = processedMessages[processedMessages.length - 1];
-          console.log(`[${requestId}] SANITIZER: Popping trailing assistant message to prevent Gemini failure (Model: ${modelId}, Content length: ${lastMsg.content?.length || 0})`);
+          const content = typeof lastMsg.content === 'string' ? lastMsg.content : '';
+          
+          if (content.trim()) {
+            lastPoppedContent = content + (lastPoppedContent ? '\n' + lastPoppedContent : '');
+          }
+          
+          console.log(`[${requestId}] SANITIZER: Popping trailing assistant message to prevent Gemini failure (Model: ${modelId}, Content length: ${content.length})`);
           processedMessages.pop();
           poppedCount++;
         }
         
         if (poppedCount > 0) {
-          if (processedMessages.length === 0 || processedMessages[processedMessages.length - 1].role !== 'user') {
+          if (processedMessages.length > 0 && processedMessages[processedMessages.length - 1].role === 'user') {
+            // If we have content that was popped, append it to the last user message as context
+            if (lastPoppedContent) {
+              const lastUserMsg = processedMessages[processedMessages.length - 1];
+              console.log(`[${requestId}] SANITIZER: Moving popped assistant content (${lastPoppedContent.length} chars) to last user message for continuity.`);
+              lastUserMsg.content = `${lastUserMsg.content}\n\n[Assistant Continuation Context]:\n${lastPoppedContent}`;
+            }
+          } else {
             console.log(`[${requestId}] SANITIZER: After popping, last message is not 'user'. Adding placeholder to ensure generation.`);
-            processedMessages.push({ role: 'user', content: 'Continue the conversation.' });
+            let content = 'Continue the conversation.';
+            if (lastPoppedContent) {
+              content = `Continue from this context:\n${lastPoppedContent}`;
+            }
+            processedMessages.push({ role: 'user', content });
           }
         }
       } else {
@@ -834,7 +930,7 @@ export async function POST(request: NextRequest) {
           const data = await safeResponseJson(response, null as any);
           
           // Track usage for fast-path success
-          if (apiKeyInfo) {
+          if (apiKeyInfo && !isSystemRequest) {
             const usageWeight = model.usageWeight || 1;
             await trackUsage(apiKeyInfo.id, apiKeyInfo.userId, modelId, 'chat', body.messages, usageWeight);
           }
@@ -1246,7 +1342,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Track usage in background if authenticated
-    if (apiKeyInfo) {
+    if (apiKeyInfo && !isSystemRequest) {
       // Pass messages for token estimation and include usage weight for RPD logic
       const usageWeight = model.usageWeight || 1;
       await trackUsage(apiKeyInfo.id, apiKeyInfo.userId, modelId, 'chat', body.messages, usageWeight);
@@ -1457,12 +1553,27 @@ export async function POST(request: NextRequest) {
         responseData.choices[0].message.content = assistantContent;
       }
     }
-    if (!assistantContent && model.provider === 'pollinations' && modelId.includes('gemini')) {
-      console.error(`[${requestId}] EMPTY CONTENT DETECTED! Full response:`, JSON.stringify(responseData, null, 2));
+
+    // --- EMPTY CONTENT FALLBACK ---
+    // Gemini models sometimes return empty content if safety filters are triggered 
+    // or if the prompt structure is problematic.
+    if (!assistantContent && modelId.includes('gemini')) {
+      console.error(`[${requestId}] EMPTY CONTENT DETECTED from Gemini! Full response:`, JSON.stringify(responseData, null, 2));
+      
+      // Provide a graceful fallback instead of an empty response
+      const fallbackMessage = "I apologize, but I encountered an issue generating a response for this request. This can sometimes happen with complex prompts or sensitive topics. Please try rephrasing your message or switching to a different model (like OpenAI or Claude).";
+      
+      if (responseData && responseData.choices && responseData.choices[0] && responseData.choices[0].message) {
+        responseData.choices[0].message.content = fallbackMessage;
+        responseData.choices[0].finish_reason = 'content_filter';
+        assistantContent = fallbackMessage;
+      }
     }
+    // ------------------------------
     
     // Remember interaction in background
-     if (userId && lastMessage && (modelId === 'gemini-large' || body.use_memory)) {
+  const isFandomEnabled = apiKeyInfo?.fandomPluginEnabled || false;
+  if (userId && lastMessage && (modelId === 'gemini-large' || body.use_memory || isFandomEnabled)) {
        const assistantMessage = assistantContent;
        if (assistantMessage) {
          rememberInteraction(lastMessage, assistantMessage, userId, characterId).catch(err => 

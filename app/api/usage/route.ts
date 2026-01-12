@@ -1,18 +1,21 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { auth } from '@clerk/nextjs/server';
+import { getLogtoContext } from '@logto/next/server-actions';
+import { logtoConfig } from '@/lib/logto';
 import { supabaseAdmin } from '@/lib/supabase';
-import { getDailyLimitInfo, applyPlanOverride, applyPeakHoursLimit } from '@/lib/api-keys';
+import { getDailyLimitInfo, applyPlanOverride, applyPeakHoursLimit, isPeakHours } from '@/lib/api-keys';
 import { getCorsHeaders } from '@/lib/utils';
 
 export const runtime = 'nodejs';
 
 export async function GET(request: NextRequest) {
   try {
-    const { userId } = await auth();
+    const { isAuthenticated, claims } = await getLogtoContext(logtoConfig);
     
-    if (!userId) {
+    if (!isAuthenticated || !claims) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401, headers: getCorsHeaders() });
     }
+
+    const userId = claims.sub;
 
     // Get user profile to determine plan
     const { data: profile, error: profileError } = await supabaseAdmin
@@ -43,8 +46,10 @@ export async function GET(request: NextRequest) {
       dailyLimit = 1000;
     }
 
-    // Apply peak hours reduction
-    const finalDailyLimit = applyPeakHoursLimit(dailyLimit);
+    // For daily limit info, we don't apply peak hours reduction to the quota itself
+    // to avoid locking out users who already used their quota.
+    // RPM is reduced in the chat completions route instead.
+    const finalDailyLimit = dailyLimit;
 
     // Get usage info
     // For session users, we use their userId as the tracking key
@@ -56,7 +61,7 @@ export async function GET(request: NextRequest) {
       remaining: dailyInfo.remaining,
       used: Math.max(0, finalDailyLimit - dailyInfo.remaining),
       resetAt: dailyInfo.resetAt,
-      isPeakHours: dailyLimit !== finalDailyLimit
+      isPeakHours: isPeakHours()
     }, {
       headers: getCorsHeaders()
     });

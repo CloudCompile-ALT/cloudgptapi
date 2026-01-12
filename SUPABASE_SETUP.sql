@@ -9,7 +9,9 @@ CREATE TABLE IF NOT EXISTS public.api_keys (
     daily_usage_count INTEGER DEFAULT 0,
     last_reset_at TIMESTAMP WITH TIME ZONE DEFAULT timezone('utc'::text, now()) NOT NULL,
     created_at TIMESTAMP WITH TIME ZONE DEFAULT timezone('utc'::text, now()) NOT NULL,
-    last_used_at TIMESTAMP WITH TIME ZONE
+    last_used_at TIMESTAMP WITH TIME ZONE,
+    fandom_plugin_enabled BOOLEAN DEFAULT false,
+    fandom_settings JSONB DEFAULT '{"max_lore_tokens": 800, "auto_summarize": true, "cache_mode": "aggressive", "preferred_sources": ["fandom", "wikipedia"]}'::JSONB
 );
 
 -- Create Usage Logs table
@@ -32,8 +34,11 @@ CREATE INDEX IF NOT EXISTS idx_rate_limits_reset_at ON public.rate_limits(reset_
 
 -- Create Profiles table to track user plans and roles
 CREATE TABLE IF NOT EXISTS public.profiles (
-    id TEXT PRIMARY KEY, -- Matches clerk user id
+    id TEXT PRIMARY KEY, -- Matches authentication provider user id (Logto or old Clerk ID)
     email TEXT,
+    username TEXT,
+    name TEXT,
+    avatar TEXT,
     role TEXT DEFAULT 'user', -- 'user', 'admin'
     plan TEXT DEFAULT 'free', -- 'free', 'pro', 'enterprise'
     stripe_product_id TEXT,
@@ -61,7 +66,7 @@ ALTER TABLE public.user_subscriptions ENABLE ROW LEVEL SECURITY;
 DROP POLICY IF EXISTS "Users can view their own subscriptions" ON public.user_subscriptions;
 CREATE POLICY "Users can view their own subscriptions"
     ON public.user_subscriptions FOR SELECT
-    USING (true); -- Authenticated via Clerk in API
+    USING (true); -- Authenticated via Logto in API
 
 -- Function to handle user role and plan updates
 CREATE OR REPLACE FUNCTION public.handle_updated_at()
@@ -85,12 +90,12 @@ ALTER TABLE public.profiles ENABLE ROW LEVEL SECURITY;
 DROP POLICY IF EXISTS "Users can view their own profile" ON public.profiles;
 CREATE POLICY "Users can view their own profile"
     ON public.profiles FOR SELECT
-    USING (true); -- Authenticated via Clerk in API
+    USING (true); -- Authenticated via Logto in API
 
 DROP POLICY IF EXISTS "Admins can manage all profiles" ON public.profiles;
 CREATE POLICY "Admins can manage all profiles"
     ON public.profiles FOR ALL
-    USING (true); -- Authenticated via Clerk in API
+    USING (true); -- Authenticated via Logto in API
 
 -- Function to increment usage count and daily usage
 CREATE OR REPLACE FUNCTION public.increment_usage_count(key_id UUID, p_weight INTEGER DEFAULT 1)
@@ -190,14 +195,14 @@ DROP POLICY IF EXISTS "Public access to API keys" ON public.api_keys;
 CREATE POLICY "Public access to API keys"
     ON public.api_keys FOR ALL
     USING (true)
-    WITH CHECK (true); -- Authenticated via Clerk in API
+    WITH CHECK (true); -- Authenticated via Logto in API
 
 -- Policies for usage_logs
 DROP POLICY IF EXISTS "Public access to usage logs" ON public.usage_logs;
 CREATE POLICY "Public access to usage logs"
     ON public.usage_logs FOR ALL
     USING (true)
-    WITH CHECK (true); -- Authenticated via Clerk in API
+    WITH CHECK (true); -- Authenticated via Logto in API
 
 -- Function to check daily limit
 CREATE OR REPLACE FUNCTION public.check_daily_limit(

@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { auth } from '@clerk/nextjs/server';
+import { getLogtoContext } from '@logto/next/server-actions';
+import { logtoConfig } from '@/lib/logto';
 import { extractApiKey, validateApiKey, trackUsage, checkRateLimit, getRateLimitInfo, checkDailyLimit, getDailyLimitInfo, ApiKey, applyPlanOverride, applyPeakHoursLimit } from '@/lib/api-keys';
 import { VIDEO_MODELS, PROVIDER_URLS, PREMIUM_MODELS } from '@/lib/providers';
 import { getCorsHeaders, hasProAccess, hasVideoAccess } from '@/lib/utils';
@@ -31,7 +32,15 @@ export async function GET() {
 export async function POST(request: NextRequest) {
   try {
     // Get user from session
-    const { userId: sessionUserId } = await auth();
+    let sessionUserId = null;
+    try {
+      const { isAuthenticated, claims } = await getLogtoContext(logtoConfig);
+      if (isAuthenticated && claims) {
+        sessionUserId = claims.sub;
+      }
+    } catch (authError) {
+      // Ignore auth error for API keys
+    }
 
     // Extract and validate API key
     const rawApiKey = extractApiKey(request.headers);
@@ -90,9 +99,12 @@ export async function POST(request: NextRequest) {
     // Apply peak hours reduction (5 PM - 5 AM UTC): 50% reduction for all users
     limit = applyPeakHoursLimit(limit);
     dailyLimit = applyPeakHoursLimit(dailyLimit);
+    
+    // VPS Bypass: Don't count requests from our own VPS against RPD
+    const isSystemRequest = clientIp === '157.151.169.121';
 
     // Check daily limit first
-    if (!await checkDailyLimit(effectiveKey, dailyLimit, apiKeyInfo?.id)) {
+    if (!isSystemRequest && !await checkDailyLimit(effectiveKey, dailyLimit, apiKeyInfo?.id)) {
       const dailyInfo = await getDailyLimitInfo(effectiveKey, dailyLimit, apiKeyInfo?.id);
       return NextResponse.json(
         { 
@@ -114,7 +126,7 @@ export async function POST(request: NextRequest) {
       );
     }
     
-    if (!await checkRateLimit(effectiveKey, limit, 'video')) {
+    if (!isSystemRequest && !await checkRateLimit(effectiveKey, limit, 'video')) {
       const rateLimitInfo = await getRateLimitInfo(effectiveKey, limit, 'video');
       return NextResponse.json(
         { 
@@ -297,9 +309,9 @@ export async function POST(request: NextRequest) {
       );
     }
     
-    // Track usage
-    if (apiKeyInfo) {
-      const usageWeight = model.usageWeight || 50;
+    // Track usage in background if authenticated
+    if (apiKeyInfo && !isSystemRequest) {
+      const usageWeight = model.usageWeight || 1;
       await trackUsage(apiKeyInfo.id, apiKeyInfo.userId, modelId, 'video', undefined, usageWeight);
     }
 

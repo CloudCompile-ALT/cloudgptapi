@@ -12,6 +12,13 @@ export interface ApiKey {
   rateLimit: number;
   usageCount: number;
   plan?: string;
+  fandomPluginEnabled?: boolean;
+  fandomSettings?: {
+    maxLoreTokens: number;
+    autoSummarize: boolean;
+    cacheMode: string;
+    preferredSources: string[];
+  };
 }
 
 // Generate a new API key with the cgpt_ prefix
@@ -108,7 +115,14 @@ export function applyPeakHoursLimit(baseLimit: number): number {
       lastUsedAt: data.last_used_at,
       rateLimit: data.rate_limit || 10,
       usageCount: data.usage_count || 0,
-      plan: userPlan
+      plan: userPlan,
+      fandomPluginEnabled: data.fandom_plugin_enabled || false,
+      fandomSettings: data.fandom_settings || {
+        maxLoreTokens: 800,
+        autoSummarize: true,
+        cacheMode: 'aggressive',
+        preferredSources: ['fandom', 'wikipedia']
+      }
     };
   }
 
@@ -161,6 +175,9 @@ export async function trackUsage(
     });
 }
 
+// Cache for plan overrides to avoid redundant DB updates
+const overrideCache = new Set<string>();
+
 /**
  * Apply manual plan overrides for specific users
  * Returns the corrected plan name
@@ -179,8 +196,10 @@ export async function applyPlanOverride(email: string, currentPlan: string, user
     needsUpdate = true;
   }
 
-  if (needsUpdate) {
+  // Only update if not already in cache to prevent loops in a single process
+  if (needsUpdate && !overrideCache.has(userIdOrEmail)) {
     try {
+      overrideCache.add(userIdOrEmail);
       const query = supabaseAdmin.from('profiles').update({ plan: newPlan });
       if (identifierType === 'id') {
         await query.eq('id', userIdOrEmail);
@@ -190,6 +209,7 @@ export async function applyPlanOverride(email: string, currentPlan: string, user
       console.log(`[PlanOverride] Updated ${email} to ${newPlan}`);
     } catch (err) {
       console.error(`[PlanOverride] Failed to update plan for ${email}:`, err);
+      overrideCache.delete(userIdOrEmail); // Allow retry on failure
     }
   }
 

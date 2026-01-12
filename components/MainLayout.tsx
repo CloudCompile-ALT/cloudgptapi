@@ -1,9 +1,10 @@
 'use client';
 
 import React from 'react';
-import { SignedIn, SignedOut, SignInButton, UserButton } from '@clerk/nextjs';
-import { Cloud, LayoutDashboard, Zap, Rocket, BookOpen, FileText, Shield, Menu, X } from 'lucide-react';
+import { useLogto } from '@logto/react';
+import { Cloud, LayoutDashboard, Zap, Rocket, BookOpen, FileText, Shield, Code } from 'lucide-react';
 import { Sidebar } from './Sidebar';
+import { BottomNav } from './BottomNav';
 import { UserStatus } from './user-status';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
@@ -30,8 +31,12 @@ function LaunchBanner() {
   );
 }
 
-function Header({ isAppPage }: { isAppPage: boolean }) {
-  const [mobileMenuOpen, setMobileMenuOpen] = React.useState(false);
+function Header({ 
+  isAppPage, 
+}: { 
+  isAppPage: boolean;
+}) {
+  const { isAuthenticated, signIn, signOut } = useLogto();
 
   return (
     <header className={cn(
@@ -40,14 +45,6 @@ function Header({ isAppPage }: { isAppPage: boolean }) {
     )}>
       <div className="mx-auto flex h-16 items-center justify-between px-4 sm:px-6 lg:px-8">
         <div className="flex items-center gap-4">
-          {isAppPage && (
-            <button 
-              onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-              className="lg:hidden p-2 text-slate-600 hover:bg-slate-100 rounded-lg transition-colors"
-            >
-              {mobileMenuOpen ? <X className="h-6 w-6" /> : <Menu className="h-6 w-6" />}
-            </button>
-          )}
           <div className="flex items-center gap-2">
             <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-primary shadow-lg shadow-primary/20">
               <Cloud className="h-5 w-5 text-white" />
@@ -68,43 +65,38 @@ function Header({ isAppPage }: { isAppPage: boolean }) {
         )}
 
         <div className="flex items-center gap-4">
-          <SignedOut>
-            <SignInButton mode="modal">
-              <button className="rounded-lg bg-primary px-4 py-2 text-sm font-semibold text-white shadow-md shadow-primary/20 hover:bg-primary/90 transition-all">
-                Sign In
+          {!isAuthenticated ? (
+            <button 
+              onClick={() => signIn(`${window.location.origin}/api/logto/sign-in-callback`)}
+              className="rounded-lg bg-primary px-4 py-2 text-sm font-semibold text-white shadow-md shadow-primary/20 hover:bg-primary/90 transition-all"
+            >
+              Sign In
+            </button>
+          ) : (
+            <div className="flex items-center gap-4">
+              <UserStatus />
+              <button 
+                onClick={() => signOut(window.location.origin)}
+                className="text-sm font-medium text-slate-600 hover:text-primary transition-colors"
+              >
+                Sign Out
               </button>
-            </SignInButton>
-          </SignedOut>
-          <SignedIn>
-            <UserStatus />
-            <UserButton afterSignOutUrl="/" />
-          </SignedIn>
+            </div>
+          )}
         </div>
       </div>
-
-      {/* Mobile Menu */}
-      {mobileMenuOpen && isAppPage && (
-        <div className="lg:hidden border-t border-border bg-background p-4 space-y-2 animate-in slide-in-from-top duration-200">
-          <Link href="/dashboard" className="flex items-center gap-3 px-3 py-2 text-sm font-medium rounded-lg hover:bg-slate-100">
-            <LayoutDashboard className="h-5 w-5" /> Dashboard
-          </Link>
-          <Link href="/playground" className="flex items-center gap-3 px-3 py-2 text-sm font-medium rounded-lg hover:bg-slate-100">
-            <Zap className="h-5 w-5" /> Playground
-          </Link>
-          <Link href="/models" className="flex items-center gap-3 px-3 py-2 text-sm font-medium rounded-lg hover:bg-slate-100">
-            <Rocket className="h-5 w-5" /> Models
-          </Link>
-          <Link href="/docs" className="flex items-center gap-3 px-3 py-2 text-sm font-medium rounded-lg hover:bg-slate-100">
-            <BookOpen className="h-5 w-5" /> Docs
-          </Link>
-        </div>
-      )}
     </header>
   );
 }
 
 export function MainLayout({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
+  const [mobileMenuOpen, setMobileMenuOpen] = React.useState(false);
+  
+  // Close mobile menu when pathname changes
+  React.useEffect(() => {
+    setMobileMenuOpen(false);
+  }, [pathname]);
   
   const isAppPage = pathname.startsWith('/dashboard') || 
                    pathname.startsWith('/playground') || 
@@ -116,19 +108,27 @@ export function MainLayout({ children }: { children: React.ReactNode }) {
   return (
     <div className="min-h-screen bg-background dot-grid">
       {isLandingPage && <LaunchBanner />}
-      <Header isAppPage={isAppPage} />
+      <Header 
+        isAppPage={isAppPage} 
+      />
       
       <div className="flex">
-        {isAppPage && <Sidebar />}
+        {isAppPage && (
+          <Sidebar 
+            isOpen={mobileMenuOpen} 
+            onClose={() => setMobileMenuOpen(false)} 
+          />
+        )}
         <main className={cn(
           "flex-1 transition-all duration-300 relative",
-          isAppPage ? "lg:pl-72" : ""
+          isAppPage ? "lg:pl-72 pb-16 lg:pb-0" : ""
         )}>
           <div className="min-h-screen relative z-10">
             {children}
           </div>
         </main>
       </div>
+      {isAppPage && <BottomNav onMenuClick={() => setMobileMenuOpen(true)} />}
     </div>
   );
 }

@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { auth } from '@clerk/nextjs/server';
+import { getLogtoContext } from '@logto/next/server-actions';
+import { logtoConfig } from '@/lib/logto';
 import { extractApiKey, validateApiKey, trackUsage, checkRateLimit, getRateLimitInfo, checkDailyLimit, getDailyLimitInfo, ApiKey, applyPlanOverride, applyPeakHoursLimit } from '@/lib/api-keys';
 import { VIDEO_MODELS, PROVIDER_URLS, VideoModel, PREMIUM_MODELS } from '@/lib/providers';
 import { getPollinationsApiKey, safeResponseJson, hasProAccess, hasVideoAccess } from '@/lib/utils';
@@ -55,7 +56,15 @@ export async function POST(request: NextRequest) {
 async function handleVideoGeneration(request: NextRequest, body: any) {
   try {
     // Get user from session
-    const { userId: sessionUserId } = await auth();
+    let sessionUserId = null;
+    try {
+      const { isAuthenticated, claims } = await getLogtoContext(logtoConfig);
+      if (isAuthenticated && claims) {
+        sessionUserId = claims.sub;
+      }
+    } catch (authError) {
+      // Ignore auth error for API keys
+    }
     
     // Extract and validate API key
     const rawApiKey = extractApiKey(request.headers);
@@ -120,8 +129,11 @@ async function handleVideoGeneration(request: NextRequest, body: any) {
     limit = applyPeakHoursLimit(limit);
     dailyLimit = applyPeakHoursLimit(dailyLimit);
     
+    // VPS Bypass: Don't count requests from our own VPS against RPD
+    const isSystemRequest = clientIp === '157.151.169.121';
+    
     // Check Daily Limit First
-    if (!await checkDailyLimit(effectiveKey, dailyLimit, apiKeyInfo?.id)) {
+    if (!isSystemRequest && !await checkDailyLimit(effectiveKey, dailyLimit, apiKeyInfo?.id)) {
       const dailyInfo = await getDailyLimitInfo(effectiveKey, dailyLimit, apiKeyInfo?.id);
       return NextResponse.json(
         { 
@@ -142,7 +154,7 @@ async function handleVideoGeneration(request: NextRequest, body: any) {
       );
     }
     
-    if (!await checkRateLimit(effectiveKey, limit, 'video')) {
+    if (!isSystemRequest && !await checkRateLimit(effectiveKey, limit, 'video')) {
       const rateLimitInfo = await getRateLimitInfo(effectiveKey, limit, 'video');
       const dailyLimitInfo = await getDailyLimitInfo(effectiveKey, dailyLimit, apiKeyInfo?.id);
       
@@ -258,7 +270,7 @@ async function handleVideoGeneration(request: NextRequest, body: any) {
     }
 
     // Track usage in background if authenticated
-    if (apiKeyInfo) {
+    if (apiKeyInfo && !isSystemRequest) {
       await trackUsage(apiKeyInfo.id, apiKeyInfo.userId, modelId, 'video', body.prompt);
     }
 

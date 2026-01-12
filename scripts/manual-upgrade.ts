@@ -37,7 +37,7 @@ async function upgradeUserByEmail(email: string) {
       console.log('User might not have logged into the dashboard yet. Creating profile...');
       // If user doesn't exist, we might need to wait for them to log in, 
       // OR we can create a placeholder if we have a userId. 
-      // Since we don't have the Clerk userId, we can't create the profile correctly.
+      // Since we don't have the Logto userId, we can't create the profile correctly.
       return;
     }
 
@@ -108,7 +108,7 @@ async function upgradeUserByEmail(email: string) {
   }
 }
 
-const targetEmail = process.argv[2] || 'ceciabby2@gmail.com';
+const targetEmail = process.argv[2] || 'husseyjaylon@gmail.com';
 
 if (!targetEmail) {
   console.error('Please provide an email as an argument.');

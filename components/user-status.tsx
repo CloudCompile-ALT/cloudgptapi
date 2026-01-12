@@ -1,29 +1,41 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { useUser } from '@clerk/nextjs';
+import { useLogto } from '@logto/react';
 import { Crown, Shield, Zap, ArrowUpCircle } from 'lucide-react';
 import { cn, hasProAccess } from '@/lib/utils';
 import Link from 'next/link';
 
+// Global cache for profile to avoid redundant fetches on navigation
+let profileCache: { role: string; plan: string; timestamp: number } | null = null;
+
 export function UserStatus() {
-  const { user, isLoaded } = useUser();
-  const [profile, setProfile] = useState<{ role: string; plan: string } | null>(null);
+  const { isAuthenticated } = useLogto();
+  const [profile, setProfile] = useState<{ role: string; plan: string } | null>(profileCache);
 
   useEffect(() => {
-    if (isLoaded && user) {
+    if (isAuthenticated) {
+      const now = Date.now();
+      // Use cache if it's less than 5 minutes old
+      if (profileCache && now - profileCache.timestamp < 1000 * 60 * 5) {
+        setProfile(profileCache);
+        return;
+      }
+
       fetch('/api/profile')
         .then(res => res.json())
         .then(data => {
           if (data.profile) {
-            setProfile(data.profile);
+            const newProfile = { ...data.profile, timestamp: now };
+            profileCache = newProfile;
+            setProfile(newProfile);
           }
         })
         .catch(err => console.error('Failed to fetch user profile:', err));
     }
-  }, [isLoaded, user]);
+  }, [isAuthenticated]);
 
-  if (!isLoaded || !user || !profile) return null;
+  if (!isAuthenticated || !profile) return null;
   
   const isPro = hasProAccess(profile.plan);
   const isAdmin = profile.role === 'admin' || profile.plan === 'admin';

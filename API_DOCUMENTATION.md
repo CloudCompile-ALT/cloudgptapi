@@ -74,7 +74,7 @@ CloudGPT automatically adds or propagates headers to upstream providers (like Po
 | Header | Value / Source | Description |
 |--------|----------------|-------------|
 | `X-App-Source` | `CloudGPT-Website` or `CloudGPT-API` | Identifies if the request came from the official playground or a 3rd party API client. |
-| `x-user-id` | Clerk ID, API Key User ID, or IP-based ID | A unique identifier for the end-user, ensuring isolated storage/memory in backend routers. |
+| `x-user-id` | Logto ID, API Key User ID, or IP-based ID | A unique identifier for the end-user, ensuring isolated storage/memory in backend routers. |
 
 *Note: API clients can pass their own `x-user-id` header to override the default identification for their end-users.*
 

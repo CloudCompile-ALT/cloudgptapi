@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { auth } from '@clerk/nextjs/server';
+import { getLogtoContext } from '@logto/next/server-actions';
+import { logtoConfig } from '@/lib/logto';
 import { extractApiKey, validateApiKey, trackUsage, checkRateLimit, getRateLimitInfo, checkDailyLimit, getDailyLimitInfo, ApiKey, applyPlanOverride, applyPeakHoursLimit } from '@/lib/api-keys';
 import { IMAGE_MODELS, PROVIDER_URLS, ImageModel, PREMIUM_MODELS } from '@/lib/providers';
 import { getCorsHeaders, getPollinationsApiKey, getPollinationsApiKeys, safeResponseJson, hasProAccess } from '@/lib/utils';
@@ -50,7 +51,15 @@ function getStableHordeModelName(modelId: string): string {
 
 export async function POST(request: NextRequest) {
   try {
-    const { userId: sessionUserId } = await auth();
+    let sessionUserId = null;
+    try {
+      const { isAuthenticated, claims } = await getLogtoContext(logtoConfig);
+      if (isAuthenticated && claims) {
+        sessionUserId = claims.sub;
+      }
+    } catch (authError) {
+      // Ignore auth error for API keys
+    }
     const rawApiKey = extractApiKey(request.headers);
     const clientIp = (request as any).ip || 
                      request.headers.get('x-forwarded-for')?.split(',')[0] || 
@@ -111,8 +120,11 @@ export async function POST(request: NextRequest) {
     limit = applyPeakHoursLimit(limit);
     dailyLimit = applyPeakHoursLimit(dailyLimit);
     
+    // VPS Bypass: Don't count requests from our own VPS against RPD
+    const isSystemRequest = clientIp === '157.151.169.121';
+    
     // Check Daily Limit First
-    if (!await checkDailyLimit(effectiveKey, dailyLimit, apiKeyInfo?.id)) {
+    if (!isSystemRequest && !await checkDailyLimit(effectiveKey, dailyLimit, apiKeyInfo?.id)) {
       const dailyInfo = await getDailyLimitInfo(effectiveKey, dailyLimit, apiKeyInfo?.id);
       return NextResponse.json(
         { 
@@ -134,7 +146,7 @@ export async function POST(request: NextRequest) {
       );
     }
     
-    if (!await checkRateLimit(effectiveKey, limit, 'image')) {
+    if (!isSystemRequest && !await checkRateLimit(effectiveKey, limit, 'image')) {
       const rateLimitInfo = await getRateLimitInfo(effectiveKey, limit, 'image');
       return NextResponse.json(
         { 
@@ -625,7 +637,7 @@ export async function POST(request: NextRequest) {
       }
     }
 
-    if (apiKeyInfo) {
+    if (apiKeyInfo && !isSystemRequest) {
       const usageWeight = model.usageWeight || 5;
       await trackUsage(apiKeyInfo.id, apiKeyInfo.userId, modelId, 'image', undefined, usageWeight);
     }

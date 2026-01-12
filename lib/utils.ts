@@ -18,20 +18,23 @@ export function getCorsHeaders() {
  * Get all available Pollinations API keys
  */
 export function getPollinationsApiKeys(): string[] {
+  const invalidKeys = [
+    'sk_v36iYt2n9Xm4PqW7zR5bL8kH1jD0vS9u', // Expired/Invalid Key 1 (Confirmed unresponsive)
+    'sk_nun1ulPVBLupdJrHBF7CGwIgBAoJsEV3', // Key 4 (Requested removal / Insufficient balance)
+    'sk_dk0IDDUCHuz2RUyEZtAJ668NKMd6d5Vv', // Hardcoded Priority Key (Requested removal)
+  ];
+
   const keys = [
-    'sk_v36iYt2n9Xm4PqW7zR5bL8kH1jD0vS9u', // Hardcoded Priority Key 1
-    'sk_dk0IDDUCHuz2RUyEZtAJ668NKMd6d5Vv', // Hardcoded Priority Key 2
-    'sk_nun1ulPVBLupdJrHBF7CGwIgBAoJsEV3', // User Provided Key 4
     process.env.POLLINATIONS_API_KEY_2,
     process.env.POLLINATIONS_API_KEY,
     process.env.POLLINATIONS_API_KEY_1,
     process.env.POLLINATIONS_API_KEY_3,
-    process.env.POLLINATIONS_API_KEY_4,
     process.env.POLLINATIONS_API_KEY_5,
     process.env.POLLINATIONS_KEY_3,
   ].filter(Boolean) as string[];
   
-  return Array.from(new Set(keys));
+  // Filter out invalid keys and duplicates
+  return Array.from(new Set(keys)).filter(key => !invalidKeys.includes(key));
 }
 
 /**
@@ -41,7 +44,6 @@ export function getClaudeApiKeys(): string[] {
   const keys = [
     process.env.CLAUDE_API_KEY,
     process.env.ANTHROPIC_API_KEY,
-    'sk_v36iYt2n9Xm4PqW7zR5bL8kH1jD0vS9u', // Also use the priority keys as fallback
   ].filter(Boolean) as string[];
   
   return Array.from(new Set(keys));
@@ -97,18 +99,20 @@ export async function safeResponseJson<T>(response: Response, fallback: T): Prom
  * Also looks for OPENROUTER_API_KEY_1 through OPENROUTER_API_KEY_5
  */
 export function getOpenRouterApiKeys(): string[] {
+  const invalidKeys = [
+    'sk_nun1ulPVBLupdJrHBF7CGwIgBAoJsEV3', // Key 4 (Requested removal)
+  ];
+
   const keys = [
     process.env.OPENROUTER_API_KEY,
     process.env.OPENROUTER_FALLBACK_KEY,
     process.env.OPENROUTER_API_KEY_1,
     process.env.OPENROUTER_API_KEY_2,
     process.env.OPENROUTER_API_KEY_3,
-    process.env.OPENROUTER_API_KEY_4,
     process.env.OPENROUTER_API_KEY_5,
   ].filter(Boolean) as string[];
-
-  // Return unique keys to avoid trying the same key multiple times in fallback logic
-  return Array.from(new Set(keys));
+  
+  return Array.from(new Set(keys)).filter(key => !invalidKeys.includes(key));
 }
 
 /**

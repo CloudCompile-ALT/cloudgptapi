@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { auth } from '@clerk/nextjs/server';
+import { getLogtoContext } from '@logto/next/server-actions';
+import { logtoConfig } from '@/lib/logto';
 import { extractApiKey, validateApiKey, trackUsage, checkRateLimit, getRateLimitInfo, checkDailyLimit, getDailyLimitInfo, ApiKey, applyPlanOverride, applyPeakHoursLimit } from '@/lib/api-keys';
 import { CHAT_MODELS, PROVIDER_URLS } from '@/lib/providers';
 import { getCorsHeaders, safeResponseJson } from '@/lib/utils';
@@ -20,11 +21,20 @@ export async function POST(request: NextRequest) {
   const requestId = generateRequestId();
   
   try {
-    const { userId: sessionUserId } = await auth();
+    let sessionUserId = null;
+    try {
+      const { isAuthenticated, claims } = await getLogtoContext(logtoConfig);
+      if (isAuthenticated && claims) {
+        sessionUserId = claims.sub;
+      }
+    } catch (authError) {
+      // Ignore auth error for API keys
+    }
     const rawApiKey = extractApiKey(request.headers);
     
     const clientIp = (request as any).ip || 
                      request.headers.get('x-forwarded-for')?.split(',')[0] || 
+                     request.headers.get('x-real-ip') || 
                      'anonymous';
     const effectiveKey = rawApiKey || clientIp;
     
@@ -71,7 +81,10 @@ export async function POST(request: NextRequest) {
     limit = applyPeakHoursLimit(limit);
     dailyLimit = applyPeakHoursLimit(dailyLimit);
     
-    if (!await checkDailyLimit(effectiveKey, dailyLimit, apiKeyInfo?.id)) {
+    // VPS Bypass: Don't count requests from our own VPS against RPD
+    const isSystemRequest = clientIp === '157.151.169.121';
+    
+    if (!isSystemRequest && !await checkDailyLimit(effectiveKey, dailyLimit, apiKeyInfo?.id)) {
       const dailyInfo = await getDailyLimitInfo(effectiveKey, dailyLimit, apiKeyInfo?.id);
       return NextResponse.json(
         { 
@@ -88,7 +101,7 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    if (!await checkRateLimit(effectiveKey, limit, 'embeddings')) {
+    if (!isSystemRequest && !await checkRateLimit(effectiveKey, limit, 'embeddings')) {
       const rateLimitInfo = await getRateLimitInfo(effectiveKey, limit, 'embeddings');
       return NextResponse.json(
         { error: { message: 'Rate limit exceeded', type: 'requests', code: 'rate_limit_exceeded' } },
@@ -140,7 +153,8 @@ export async function POST(request: NextRequest) {
 
     const data = await response.json();
 
-    if (apiKeyInfo) {
+    // Track usage in background if authenticated
+    if (apiKeyInfo && !isSystemRequest) {
       const usageWeight = model.usageWeight || 1;
       await trackUsage(apiKeyInfo.id, apiKeyInfo.userId, modelId, 'chat', body.input, usageWeight);
     }

@@ -1,41 +1,67 @@
-import { Bot, Clock, Code, Crown, ExternalLink, Hash, Image as ImageIcon, Info, MessageSquare, Shield, Terminal, Video, Zap } from 'lucide-react';
+'use client';
+
+import { Bot, Clock, Code, Crown, ExternalLink, Hash, Image as ImageIcon, Info, MessageSquare, Shield, Terminal, Video, Zap, Menu, X } from 'lucide-react';
+import { useState } from 'react';
 import Link from 'next/link';
+import { cn } from '@/lib/utils';
 
 export default function DocsPage() {
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+
   return (
-    <div className="min-h-screen bg-slate-50 dark:bg-slate-950 pt-24 pb-12 px-4 sm:px-6 lg:px-8 relative overflow-hidden">
+    <div className="min-h-screen bg-slate-50 dark:bg-slate-950 pt-20 sm:pt-24 pb-8 sm:pb-12 px-4 sm:px-6 lg:px-8 relative overflow-hidden">
       {/* Background Elements */}
       <div className="fixed inset-0 mesh-gradient opacity-60 dark:opacity-40" />
       <div className="fixed inset-0 dot-grid opacity-30" />
 
+      {/* Mobile Nav Toggle */}
+      <button 
+        onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
+        className="lg:hidden fixed bottom-24 right-6 z-50 h-14 w-14 bg-primary text-white rounded-full shadow-2xl flex items-center justify-center hover:scale-110 active:scale-95 transition-all"
+      >
+        {isMobileMenuOpen ? <X className="h-6 w-6" /> : <Menu className="h-6 w-6" />}
+      </button>
+
+      {/* Mobile Sidebar Overlay */}
+      {isMobileMenuOpen && (
+        <div 
+          className="fixed inset-0 bg-slate-950/60 backdrop-blur-sm z-40 lg:hidden animate-in fade-in duration-300"
+          onClick={() => setIsMobileMenuOpen(false)}
+        />
+      )}
+
       <div className="max-w-7xl mx-auto relative z-10">
-        <div className="flex flex-col lg:flex-row gap-12">
+        <div className="flex flex-col lg:flex-row gap-8 sm:gap-12">
           
           {/* Sidebar Navigation */}
-          <aside className="lg:w-72 shrink-0 lg:sticky lg:top-32 h-fit animate-in fade-in slide-in-from-left-8 duration-1000">
-            <nav className="p-6 rounded-[2.5rem] bg-white/60 dark:bg-slate-900/60 backdrop-blur-2xl border border-white/20 dark:border-slate-800/50 shadow-2xl shadow-slate-200/50 dark:shadow-none space-y-2">
-              <div className="px-4 py-2 mb-4">
-                <p className="text-[10px] font-black text-primary uppercase tracking-[0.2em]">Documentation</p>
-                <h3 className="text-xl font-black text-slate-900 dark:text-white tracking-tight">API Guide</h3>
+          <aside className={cn(
+            "lg:w-72 shrink-0 lg:sticky lg:top-32 h-fit transition-all duration-500 z-40",
+            "fixed inset-y-0 left-0 w-[280px] bg-white dark:bg-slate-900 lg:bg-transparent lg:dark:bg-transparent p-6 lg:p-0 border-r lg:border-none",
+            isMobileMenuOpen ? "translate-x-0" : "-translate-x-full lg:translate-x-0"
+          )}>
+            <nav className="h-full lg:h-auto overflow-y-auto lg:overflow-visible p-0 lg:p-6 rounded-none lg:rounded-[2.5rem] lg:bg-white/60 lg:dark:bg-slate-900/60 lg:backdrop-blur-2xl lg:border lg:border-white/20 lg:dark:border-slate-800/50 lg:shadow-2xl lg:shadow-slate-200/50 lg:dark:shadow-none space-y-2">
+              <div className="px-3 sm:px-4 py-1 sm:py-2 mb-3 sm:mb-4">
+                <p className="text-[9px] sm:text-[10px] font-black text-primary uppercase tracking-[0.2em]">Documentation</p>
+                <h3 className="text-lg sm:text-xl font-black text-slate-900 dark:text-white tracking-tight">API Guide</h3>
               </div>
 
-              <div className="space-y-1">
-                <p className="text-[10px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-[0.2em] px-4 mt-6 mb-2">Getting Started</p>
-                <DocNavLink href="#introduction" icon={<Info className="h-4 w-4" />} label="Introduction" />
-                <DocNavLink href="#authentication" icon={<Shield className="h-4 w-4" />} label="Authentication" />
-                <DocNavLink href="#base-url" icon={<Hash className="h-4 w-4" />} label="Base URL" />
+              <div className="grid grid-cols-1 gap-1 sm:gap-2">
+                <p className="text-[9px] sm:text-[10px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-[0.2em] px-3 sm:px-4 mt-4 lg:mt-6 mb-1 sm:mb-2">Getting Started</p>
+                <DocNavLink onClick={() => setIsMobileMenuOpen(false)} href="#introduction" icon={<Info className="h-3.5 w-3.5 sm:h-4 sm:w-4" />} label="Introduction" />
+                <DocNavLink onClick={() => setIsMobileMenuOpen(false)} href="#authentication" icon={<Shield className="h-3.5 w-3.5 sm:h-4 sm:w-4" />} label="Auth" />
+                <DocNavLink onClick={() => setIsMobileMenuOpen(false)} href="#base-url" icon={<Hash className="h-3.5 w-3.5 sm:h-4 sm:w-4" />} label="Base URL" />
                 
-                <p className="text-[10px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-[0.2em] px-4 mt-8 mb-2">Endpoints</p>
-                <DocNavLink href="#memory" icon={<Bot className="h-4 w-4" />} label="Advanced Memory" />
-                <DocNavLink href="#chat" icon={<MessageSquare className="h-4 w-4" />} label="Chat Completions" />
-                <DocNavLink href="#image" icon={<ImageIcon className="h-4 w-4" />} label="Image Generation" />
-                <DocNavLink href="#video" icon={<Video className="h-4 w-4" />} label="Video Generation" />
+                <p className="text-[9px] sm:text-[10px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-[0.2em] px-3 sm:px-4 mt-6 lg:mt-8 mb-1 sm:mb-2">Endpoints</p>
+                <DocNavLink onClick={() => setIsMobileMenuOpen(false)} href="#memory" icon={<Bot className="h-3.5 w-3.5 sm:h-4 sm:w-4" />} label="Memory" />
+                <DocNavLink onClick={() => setIsMobileMenuOpen(false)} href="#chat" icon={<MessageSquare className="h-3.5 w-3.5 sm:h-4 sm:w-4" />} label="Chat" />
+                <DocNavLink onClick={() => setIsMobileMenuOpen(false)} href="#image" icon={<ImageIcon className="h-3.5 w-3.5 sm:h-4 sm:w-4" />} label="Image" />
+                <DocNavLink onClick={() => setIsMobileMenuOpen(false)} href="#video" icon={<Video className="h-3.5 w-3.5 sm:h-4 sm:w-4" />} label="Video" />
                 
-                <p className="text-[10px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-[0.2em] px-4 mt-8 mb-2">Advanced</p>
-                <DocNavLink href="#headers" icon={<Terminal className="h-4 w-4" />} label="Custom Headers" />
-                <DocNavLink href="#ratelimits" icon={<Clock className="h-4 w-4" />} label="Rate Limits" />
-                <DocNavLink href="#transparency" icon={<Shield className="h-4 w-4" />} label="Data & Privacy" />
-                <DocNavLink href="#error-handling" icon={<Zap className="h-4 w-4" />} label="Error Handling" />
+                <p className="text-[9px] sm:text-[10px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-[0.2em] px-3 sm:px-4 mt-6 lg:mt-8 mb-1 sm:mb-2">Advanced</p>
+                <DocNavLink onClick={() => setIsMobileMenuOpen(false)} href="#headers" icon={<Terminal className="h-3.5 w-3.5 sm:h-4 sm:w-4" />} label="Headers" />
+                <DocNavLink onClick={() => setIsMobileMenuOpen(false)} href="#ratelimits" icon={<Clock className="h-3.5 w-3.5 sm:h-4 sm:w-4" />} label="Limits" />
+                <DocNavLink onClick={() => setIsMobileMenuOpen(false)} href="#transparency" icon={<Shield className="h-3.5 w-3.5 sm:h-4 sm:w-4" />} label="Privacy" />
+                <DocNavLink onClick={() => setIsMobileMenuOpen(false)} href="#error-handling" icon={<Zap className="h-3.5 w-3.5 sm:h-4 sm:w-4" />} label="Errors" />
               </div>
 
               <div className="mt-8 p-4 rounded-3xl bg-primary/10 border border-primary/20">
@@ -55,44 +81,44 @@ export default function DocsPage() {
 
           {/* Main Content */}
           <main className="flex-1 max-w-4xl animate-in fade-in slide-in-from-right-8 duration-1000">
-            <header className="mb-16">
-              <div className="flex items-center gap-2 text-primary font-bold mb-4">
-                <div className="p-2 rounded-xl bg-primary/10 backdrop-blur-md border border-primary/20">
-                  <Code className="h-5 w-5" />
+            <header className="mb-10 sm:mb-16">
+              <div className="flex items-center gap-2 text-primary font-bold mb-3 sm:mb-4">
+                <div className="p-1.5 sm:p-2 rounded-lg sm:rounded-xl bg-primary/10 backdrop-blur-md border border-primary/20">
+                  <Code className="h-4 w-4 sm:h-5 sm:w-5" />
                 </div>
-                <span className="tracking-[0.2em] uppercase text-xs">Developer Portal</span>
+                <span className="tracking-[0.2em] uppercase text-[10px] sm:text-xs">Developer Portal</span>
               </div>
-              <h1 className="text-5xl md:text-6xl font-black text-slate-900 dark:text-white mb-6 tracking-tight">
+              <h1 className="text-3xl sm:text-5xl md:text-6xl font-black text-slate-900 dark:text-white mb-4 sm:mb-6 tracking-tight">
                 Documentation
               </h1>
-              <p className="text-xl text-slate-600 dark:text-slate-400 leading-relaxed">
+              <p className="text-base sm:text-xl text-slate-600 dark:text-slate-400 leading-relaxed">
                 Everything you need to integrate <span className="text-primary font-black">CloudGPT</span>'s powerful multi-modal AI infrastructure into your production applications.
               </p>
             </header>
 
-            <div className="space-y-24 pb-24">
+            <div className="space-y-12 sm:space-y-24 pb-12 sm:pb-24">
               
               {/* Introduction */}
-              <section id="introduction" className="scroll-mt-32">
-                <div className="p-10 rounded-[2.5rem] bg-white/60 dark:bg-slate-900/60 backdrop-blur-2xl border border-white/20 dark:border-slate-800/50 shadow-2xl shadow-slate-200/50 dark:shadow-none group hover:border-primary/30 transition-all duration-500">
-                  <div className="flex items-center gap-4 mb-8">
-                    <div className="p-3 rounded-2xl bg-primary/10 text-primary group-hover:scale-110 transition-transform">
-                      <Info className="h-6 w-6" />
+              <section id="introduction" className="scroll-mt-24 sm:scroll-mt-32">
+                <div className="p-6 sm:p-10 rounded-2xl sm:rounded-[2.5rem] bg-white/60 dark:bg-slate-900/60 backdrop-blur-2xl border border-white/20 dark:border-slate-800/50 shadow-2xl shadow-slate-200/50 dark:shadow-none group hover:border-primary/30 transition-all duration-500">
+                  <div className="flex items-center gap-3 sm:gap-4 mb-6 sm:mb-8">
+                    <div className="p-2 sm:p-3 rounded-xl sm:rounded-2xl bg-primary/10 text-primary group-hover:scale-110 transition-transform">
+                      <Info className="h-5 w-5 sm:h-6 sm:w-6" />
                     </div>
-                    <h2 className="text-3xl font-black text-slate-900 dark:text-white tracking-tight">Introduction</h2>
+                    <h2 className="text-xl sm:text-3xl font-black text-slate-900 dark:text-white tracking-tight">Introduction</h2>
                   </div>
                   <div className="prose prose-slate dark:prose-invert max-w-none">
-                    <p className="text-lg text-slate-600 dark:text-slate-400 leading-relaxed mb-6">
+                    <p className="text-sm sm:text-lg text-slate-600 dark:text-slate-400 leading-relaxed mb-4 sm:mb-6">
                       CloudGPT provides a unified API for accessing the world's most advanced AI models. Whether you need text generation, image creation, or complex video synthesis, our infrastructure handles the heavy lifting.
                     </p>
-                    <div className="grid sm:grid-cols-2 gap-4 mt-8">
-                      <div className="p-6 rounded-3xl bg-slate-50 dark:bg-slate-800/50 border border-slate-200/50 dark:border-slate-700/50">
-                        <h4 className="font-black text-slate-900 dark:text-white mb-2">Unified Access</h4>
-                        <p className="text-sm text-slate-500 dark:text-slate-400">One API key, dozens of models. Switch between providers with a single parameter.</p>
+                    <div className="grid sm:grid-cols-2 gap-3 sm:gap-4 mt-6 sm:mt-8">
+                      <div className="p-4 sm:p-6 rounded-2xl sm:rounded-3xl bg-slate-50 dark:bg-slate-800/50 border border-slate-200/50 dark:border-slate-700/50">
+                        <h4 className="text-sm sm:text-base font-black text-slate-900 dark:text-white mb-1 sm:mb-2">Unified Access</h4>
+                        <p className="text-xs sm:text-sm text-slate-500 dark:text-slate-400">One API key, dozens of models. Switch between providers with a single parameter.</p>
                       </div>
-                      <div className="p-6 rounded-3xl bg-slate-50 dark:bg-slate-800/50 border border-slate-200/50 dark:border-slate-700/50">
-                        <h4 className="font-black text-slate-900 dark:text-white mb-2">Enterprise Scale</h4>
-                        <p className="text-sm text-slate-500 dark:text-slate-400">99.99% uptime guarantee and global low-latency edge deployment.</p>
+                      <div className="p-4 sm:p-6 rounded-2xl sm:rounded-3xl bg-slate-50 dark:bg-slate-800/50 border border-slate-200/50 dark:border-slate-700/50">
+                        <h4 className="text-sm sm:text-base font-black text-slate-900 dark:text-white mb-1 sm:mb-2">Enterprise Scale</h4>
+                        <p className="text-xs sm:text-sm text-slate-500 dark:text-slate-400">99.99% uptime guarantee and global low-latency edge deployment.</p>
                       </div>
                     </div>
                   </div>
@@ -100,30 +126,30 @@ export default function DocsPage() {
               </section>
 
               {/* Authentication */}
-              <section id="authentication" className="scroll-mt-32">
-                <div className="p-10 rounded-[2.5rem] bg-white/60 dark:bg-slate-900/60 backdrop-blur-2xl border border-white/20 dark:border-slate-800/50 shadow-2xl shadow-slate-200/50 dark:shadow-none group hover:border-primary/30 transition-all duration-500">
-                  <div className="flex items-center gap-4 mb-8">
-                    <div className="p-3 rounded-2xl bg-emerald-500/10 text-emerald-600 group-hover:scale-110 transition-transform">
-                      <Shield className="h-6 w-6" />
+              <section id="authentication" className="scroll-mt-24 sm:scroll-mt-32">
+                <div className="p-6 sm:p-10 rounded-2xl sm:rounded-[2.5rem] bg-white/60 dark:bg-slate-900/60 backdrop-blur-2xl border border-white/20 dark:border-slate-800/50 shadow-2xl shadow-slate-200/50 dark:shadow-none group hover:border-primary/30 transition-all duration-500">
+                  <div className="flex items-center gap-3 sm:gap-4 mb-6 sm:mb-8">
+                    <div className="p-2 sm:p-3 rounded-xl sm:rounded-2xl bg-emerald-500/10 text-emerald-600 group-hover:scale-110 transition-transform">
+                      <Shield className="h-5 w-5 sm:h-6 sm:w-6" />
                     </div>
-                    <h2 className="text-3xl font-black text-slate-900 dark:text-white tracking-tight">Authentication</h2>
+                    <h2 className="text-xl sm:text-3xl font-black text-slate-900 dark:text-white tracking-tight">Authentication</h2>
                   </div>
-                  <p className="text-lg text-slate-600 dark:text-slate-400 leading-relaxed mb-8">
-                    Secure your requests using standard Bearer token authentication. Your API key should be included in the <code className="px-2 py-1 rounded-lg bg-primary/10 text-primary font-bold">Authorization</code> header.
+                  <p className="text-sm sm:text-lg text-slate-600 dark:text-slate-400 leading-relaxed mb-6 sm:mb-8">
+                    Secure your requests using standard Bearer token authentication. Your API key should be included in the <code className="px-1.5 py-0.5 rounded-md bg-primary/10 text-primary font-bold">Authorization</code> header.
                   </p>
                   <div className="relative group">
-                    <div className="absolute -inset-1 bg-gradient-to-r from-primary to-purple-600 rounded-[2rem] blur opacity-20 group-hover:opacity-40 transition duration-1000"></div>
-                    <div className="relative rounded-[2rem] bg-slate-900 overflow-hidden">
-                      <div className="flex items-center justify-between px-6 py-4 border-b border-slate-800 bg-slate-900/50">
-                        <span className="text-xs font-black text-slate-500 uppercase tracking-widest">HTTP Header</span>
+                    <div className="absolute -inset-1 bg-gradient-to-r from-primary to-purple-600 rounded-2xl sm:rounded-[2rem] blur opacity-20 group-hover:opacity-40 transition duration-1000"></div>
+                    <div className="relative rounded-2xl sm:rounded-[2rem] bg-slate-900 overflow-hidden">
+                      <div className="flex items-center justify-between px-4 sm:px-6 py-3 sm:py-4 border-b border-slate-800 bg-slate-900/50">
+                        <span className="text-[10px] font-black text-slate-500 uppercase tracking-widest">HTTP Header</span>
                         <div className="flex gap-1.5">
-                          <div className="w-2.5 h-2.5 rounded-full bg-slate-800"></div>
-                          <div className="w-2.5 h-2.5 rounded-full bg-slate-800"></div>
-                          <div className="w-2.5 h-2.5 rounded-full bg-slate-800"></div>
+                          <div className="w-2 h-2 rounded-full bg-slate-800"></div>
+                          <div className="w-2 h-2 rounded-full bg-slate-800"></div>
+                          <div className="w-2 h-2 rounded-full bg-slate-800"></div>
                         </div>
                       </div>
-                      <div className="p-8">
-                        <code className="text-sm sm:text-base text-emerald-400 font-mono leading-relaxed block whitespace-pre-wrap">
+                      <div className="p-5 sm:p-8">
+                        <code className="text-xs sm:text-base text-emerald-400 font-mono leading-relaxed block whitespace-pre-wrap">
                           Authorization: Bearer YOUR_API_KEY
                         </code>
                       </div>
@@ -133,30 +159,30 @@ export default function DocsPage() {
               </section>
 
               {/* Base URL */}
-              <section id="base-url" className="scroll-mt-32">
-                <div className="p-10 rounded-[2.5rem] bg-white/60 dark:bg-slate-900/60 backdrop-blur-2xl border border-white/20 dark:border-slate-800/50 shadow-2xl shadow-slate-200/50 dark:shadow-none group hover:border-primary/30 transition-all duration-500">
-                  <div className="flex items-center gap-4 mb-8">
-                    <div className="p-3 rounded-2xl bg-blue-500/10 text-blue-600 group-hover:scale-110 transition-transform">
-                      <Hash className="h-6 w-6" />
+              <section id="base-url" className="scroll-mt-24 sm:scroll-mt-32">
+                <div className="p-6 sm:p-10 rounded-2xl sm:rounded-[2.5rem] bg-white/60 dark:bg-slate-900/60 backdrop-blur-2xl border border-white/20 dark:border-slate-800/50 shadow-2xl shadow-slate-200/50 dark:shadow-none group hover:border-primary/30 transition-all duration-500">
+                  <div className="flex items-center gap-3 sm:gap-4 mb-6 sm:mb-8">
+                    <div className="p-2 sm:p-3 rounded-xl sm:rounded-2xl bg-blue-500/10 text-blue-600 group-hover:scale-110 transition-transform">
+                      <Hash className="h-5 w-5 sm:h-6 sm:w-6" />
                     </div>
-                    <h2 className="text-3xl font-black text-slate-900 dark:text-white tracking-tight">Base URL</h2>
+                    <h2 className="text-xl sm:text-3xl font-black text-slate-900 dark:text-white tracking-tight">Base URL</h2>
                   </div>
-                  <p className="text-lg text-slate-600 dark:text-slate-400 leading-relaxed mb-8">
+                  <p className="text-sm sm:text-lg text-slate-600 dark:text-slate-400 leading-relaxed mb-6 sm:mb-8">
                     All API requests should be made to our primary global endpoint:
                   </p>
                   <div className="relative group">
-                    <div className="absolute -inset-1 bg-gradient-to-r from-blue-600 to-cyan-500 rounded-[2rem] blur opacity-20 group-hover:opacity-40 transition duration-1000"></div>
-                    <div className="relative rounded-[2rem] bg-slate-900 overflow-hidden">
-                      <div className="flex items-center justify-between px-6 py-4 border-b border-slate-800 bg-slate-900/50">
-                        <span className="text-xs font-black text-slate-500 uppercase tracking-widest">Endpoint</span>
+                    <div className="absolute -inset-1 bg-gradient-to-r from-blue-600 to-cyan-500 rounded-2xl sm:rounded-[2rem] blur opacity-20 group-hover:opacity-40 transition duration-1000"></div>
+                    <div className="relative rounded-2xl sm:rounded-[2rem] bg-slate-900 overflow-hidden">
+                      <div className="flex items-center justify-between px-4 sm:px-6 py-3 sm:py-4 border-b border-slate-800 bg-slate-900/50">
+                        <span className="text-[10px] font-black text-slate-500 uppercase tracking-widest">Endpoint</span>
                         <div className="flex gap-1.5">
-                          <div className="w-2.5 h-2.5 rounded-full bg-slate-800"></div>
-                          <div className="w-2.5 h-2.5 rounded-full bg-slate-800"></div>
-                          <div className="w-2.5 h-2.5 rounded-full bg-slate-800"></div>
+                          <div className="w-2 h-2 rounded-full bg-slate-800"></div>
+                          <div className="w-2 h-2 rounded-full bg-slate-800"></div>
+                          <div className="w-2 h-2 rounded-full bg-slate-800"></div>
                         </div>
                       </div>
-                      <div className="p-8">
-                        <code className="text-sm sm:text-base text-blue-400 font-mono leading-relaxed block whitespace-pre-wrap">
+                      <div className="p-5 sm:p-8">
+                        <code className="text-xs sm:text-base text-blue-400 font-mono leading-relaxed block whitespace-pre-wrap">
                           https://cloudgptapi.vercel.app/v1
                         </code>
                       </div>
@@ -521,7 +547,7 @@ const videoUrl = data[0].url;`}</code>
                       </li>
                       <li className="flex items-start gap-3">
                         <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-slate-200 dark:bg-slate-800 text-xs font-bold">3</span>
-                        <span><strong>Session User:</strong> For website requests, we use the logged-in Clerk user.</span>
+                        <span><strong>Session User:</strong> For website requests, we use the logged-in Logto user.</span>
                       </li>
                       <li className="flex items-start gap-3">
                         <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-slate-200 dark:bg-slate-800 text-xs font-bold">4</span>
@@ -564,10 +590,11 @@ const videoUrl = data[0].url;`}</code>
   );
 }
 
-function DocNavLink({ href, icon, label }: { href: string, icon: React.ReactNode, label: string }) {
+function DocNavLink({ href, icon, label, onClick }: { href: string, icon: React.ReactNode, label: string, onClick?: () => void }) {
   return (
     <a 
       href={href} 
+      onClick={onClick}
       className="flex items-center gap-3 px-3 py-2 rounded-lg text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-900 hover:text-primary transition-all group"
     >
       <span className="group-hover:scale-110 transition-transform">{icon}</span>

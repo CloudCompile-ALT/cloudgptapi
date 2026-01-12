@@ -1,8 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { auth } from '@clerk/nextjs/server';
+import { getLogtoContext } from '@logto/next/server-actions';
+import { logtoConfig } from '@/lib/logto';
 import { extractApiKey, validateApiKey, trackUsage, checkRateLimit, getRateLimitInfo, applyPeakHoursLimit } from '@/lib/api-keys';
 
-export const runtime = 'edge';
+export const runtime = 'nodejs';
 
 // Handle OPTIONS for CORS
 export async function OPTIONS() {
@@ -12,7 +13,15 @@ export async function OPTIONS() {
 export async function POST(request: NextRequest) {
   try {
     // Get user from session
-    const { userId: sessionUserId } = await auth();
+    let sessionUserId = null;
+    try {
+      const { isAuthenticated, claims } = await getLogtoContext(logtoConfig);
+      if (isAuthenticated && claims) {
+        sessionUserId = claims.sub;
+      }
+    } catch (authError) {
+      // Ignore auth error for API keys
+    }
 
     // Extract and validate CloudGPT API key
     const rawApiKey = extractApiKey(request.headers);
@@ -56,29 +65,16 @@ export async function POST(request: NextRequest) {
     limit = applyPeakHoursLimit(limit);
     dailyLimit = applyPeakHoursLimit(dailyLimit);
 
-    // Check daily limit first
-    const { checkDailyLimit, getDailyLimitInfo } = await import('@/lib/api-keys');
-    if (!await checkDailyLimit(rawApiKey, dailyLimit, apiKeyInfo.id)) {
-      const dailyInfo = await getDailyLimitInfo(rawApiKey, dailyLimit, apiKeyInfo.id);
-      return NextResponse.json(
-        { 
-          error: `Daily request limit of ${dailyLimit} exceeded. Reset at ${new Date(dailyInfo.resetAt).toUTCString()}`,
-          resetAt: dailyInfo.resetAt 
-        },
-        { 
-          status: 429,
-          headers: {
-            'X-DailyLimit-Remaining': '0',
-            'X-DailyLimit-Reset': String(dailyInfo.resetAt),
-          },
-        }
-      );
-    }
+    const clientIp = request.headers.get('x-forwarded-for')?.split(',')[0] || 
+                     request.headers.get('x-real-ip') || 
+                     'anonymous';
+    
+    // VPS Bypass: Don't count requests from our own VPS against RPD
+    const isSystemRequest = clientIp === '157.151.169.121';
 
     // Check rate limit
-    if (!await checkRateLimit(rawApiKey, limit, 'mem')) {
+    if (!isSystemRequest && !await checkRateLimit(rawApiKey, limit, 'mem')) {
       const rateLimitInfo = await getRateLimitInfo(rawApiKey, limit, 'mem');
-      const dailyLimitInfo = await getDailyLimitInfo(rawApiKey, dailyLimit, apiKeyInfo.id);
       
       return NextResponse.json(
         { error: 'Rate limit exceeded', resetAt: rateLimitInfo.resetAt },
@@ -87,8 +83,6 @@ export async function POST(request: NextRequest) {
           headers: {
             'X-RateLimit-Remaining': '0',
             'X-RateLimit-Reset': String(rateLimitInfo.resetAt),
-            'X-DailyLimit-Remaining': String(dailyLimitInfo.remaining),
-            'X-DailyLimit-Reset': String(dailyLimitInfo.resetAt),
           },
         }
       );
@@ -113,11 +107,6 @@ export async function POST(request: NextRequest) {
         { status: 500 }
       );
     }
-
-    // Build headers
-    const clientIp = request.headers.get('x-forwarded-for')?.split(',')[0] || 
-                     request.headers.get('x-real-ip') || 
-                     'anonymous';
     
     // Priority: 1. Header x-user-id (from API client) 2. API Key owner 3. Session User 4. IP-based
     const userId = request.headers.get('x-user-id') || apiKeyInfo?.userId || sessionUserId || `anonymous-${clientIp}`;
@@ -148,18 +137,12 @@ export async function POST(request: NextRequest) {
 
     const data = await providerResponse.json();
 
-    // Track usage in background
-    await trackUsage(apiKeyInfo.id, apiKeyInfo.userId, 'meridian-mem', 'mem', body.prompt);
-    
     const rateLimitInfo = await getRateLimitInfo(rawApiKey);
-    const dailyLimitInfo = await getDailyLimitInfo(rawApiKey, dailyLimit, apiKeyInfo.id);
 
     return NextResponse.json(data, {
       headers: {
         'X-RateLimit-Remaining': String(rateLimitInfo.remaining),
         'X-RateLimit-Reset': String(rateLimitInfo.resetAt),
-        'X-DailyLimit-Remaining': String(dailyLimitInfo.remaining),
-        'X-DailyLimit-Reset': String(dailyLimitInfo.resetAt),
       },
     });
     

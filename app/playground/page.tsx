@@ -20,7 +20,7 @@ import {
 } from 'lucide-react';
 import { CHAT_MODELS, IMAGE_MODELS, VIDEO_MODELS, PREMIUM_MODELS } from '@/lib/providers';
 import { cn, hasProAccess, hasVideoAccess } from '@/lib/utils';
-import { useUser } from '@clerk/nextjs';
+import { useLogto } from '@logto/react';
 import Link from 'next/link';
 
 type Mode = 'chat' | 'image' | 'video';
@@ -60,7 +60,7 @@ function useCountdown(targetDate?: string) {
 }
 
 export default function PlaygroundPage() {
-  const { user, isLoaded } = useUser();
+  const { isAuthenticated } = useLogto();
   const [profile, setProfile] = useState<{ plan: string } | null>(null);
   const [mode, setMode] = useState<Mode>('chat');
   const [selectedModel, setSelectedModel] = useState(CHAT_MODELS[0].id);
@@ -78,7 +78,7 @@ export default function PlaygroundPage() {
   const scrollRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-    if (isLoaded && user) {
+    if (isAuthenticated) {
       fetch('/api/profile')
         .then(res => res.json())
         .then(data => {
@@ -88,7 +88,7 @@ export default function PlaygroundPage() {
         })
         .catch(err => console.error('Failed to fetch user profile:', err));
     }
-  }, [isLoaded, user]);
+  }, [isAuthenticated]);
 
   useEffect(() => {
     if (scrollRef.current) {
@@ -225,42 +225,42 @@ export default function PlaygroundPage() {
   };
 
   return (
-    <div className="flex flex-col h-[calc(100vh-4rem)] bg-white dark:bg-slate-950 overflow-hidden relative">
+    <div className="flex flex-col h-[calc(100dvh-4rem)] bg-white dark:bg-slate-950 overflow-hidden relative">
       <div className="absolute inset-0 mesh-gradient opacity-30 pointer-events-none" />
       <div className="absolute inset-0 dot-grid opacity-[0.03] pointer-events-none" />
 
       {/* Top Controls Bar */}
-      <div className="h-16 border-b flex items-center justify-between px-6 bg-white/80 dark:bg-slate-950/80 backdrop-blur-xl shrink-0 z-20">
-        <div className="flex items-center gap-6">
-          <div className="flex items-center gap-1 p-1 bg-slate-100/50 dark:bg-slate-900/50 rounded-2xl border border-border/50">
+      <div className="h-auto border-b border-border/50 bg-white/80 dark:bg-slate-950/80 backdrop-blur-xl px-4 sm:px-8 flex flex-col sm:flex-row items-center justify-between gap-3 sm:gap-4 py-3 sm:py-2 relative z-20">
+        <div className="flex items-center gap-3 sm:gap-6 w-full sm:w-auto overflow-x-auto scrollbar-hide pb-1 sm:pb-0">
+          <div className="flex items-center gap-1 p-1 bg-slate-100/50 dark:bg-slate-900/50 rounded-xl border border-border/50 shrink-0">
             <ModeButton 
               active={mode === 'chat'} 
               onClick={() => handleModeChange('chat')}
-              icon={<MessageSquare className="h-4 w-4" />}
+              icon={<MessageSquare className="h-3.5 w-3.5" />}
               label="Chat"
             />
             <ModeButton 
               active={mode === 'image'} 
               onClick={() => handleModeChange('image')}
-              icon={<ImageIcon className="h-4 w-4" />}
+              icon={<ImageIcon className="h-3.5 w-3.5" />}
               label="Image"
             />
             <ModeButton 
               active={mode === 'video'} 
               onClick={() => handleModeChange('video')}
-              icon={<Video className="h-4 w-4" />}
+              icon={<Video className="h-3.5 w-3.5" />}
               label="Video"
             />
           </div>
 
-          <div className="h-6 w-px bg-border/50" />
+          <div className="hidden sm:block h-6 w-px bg-border/50" />
 
-          <div className="flex items-center gap-3 px-4 py-2 rounded-xl border bg-white dark:bg-slate-900 shadow-sm hover:border-primary/30 transition-colors group">
-            <Settings2 className="h-4 w-4 text-slate-400 group-hover:text-primary transition-colors" />
+          <div className="flex items-center gap-2 px-3 py-1.5 rounded-xl border bg-white dark:bg-slate-900 shadow-sm hover:border-primary/30 transition-colors group shrink-0">
+            <Settings2 className="h-3.5 w-3.5 text-slate-400 group-hover:text-primary transition-colors" />
             <select 
               value={selectedModel}
               onChange={(e) => setSelectedModel(e.target.value)}
-              className="bg-transparent text-sm font-bold outline-none border-none focus:ring-0 cursor-pointer min-w-[140px]"
+              className="bg-transparent text-xs sm:text-sm font-bold outline-none border-none focus:ring-0 cursor-pointer min-w-[120px]"
             >
               {currentModels.map(m => {
                 const isPremium = PREMIUM_MODELS.has(m.id);
@@ -274,14 +274,19 @@ export default function PlaygroundPage() {
           </div>
         </div>
 
-        <div className="flex items-center gap-3">
+        <div className="flex items-center justify-between w-full sm:w-auto gap-3">
+          <div className="sm:hidden flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg bg-primary/10 border border-primary/20">
+            <Zap className="h-3.5 w-3.5 text-primary" />
+            <span className="text-[10px] font-black text-primary uppercase tracking-wider">{profile?.plan || 'Free'}</span>
+          </div>
+
           <button 
             onClick={() => handleModeChange(mode)}
-            className="flex items-center gap-2 px-4 py-2 rounded-xl text-slate-500 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-500/10 transition-all text-sm font-bold"
+            className="flex items-center gap-2 px-3 py-1.5 rounded-lg text-slate-500 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-500/10 transition-all text-xs font-bold ml-auto"
             title="Clear Session"
           >
-            <Trash2 className="h-4 w-4" />
-            <span className="hidden sm:inline">Clear</span>
+            <Trash2 className="h-3.5 w-3.5" />
+            <span className="hidden xs:inline">Clear</span>
           </button>
         </div>
       </div>
@@ -291,37 +296,37 @@ export default function PlaygroundPage() {
         <div className="flex-1 flex flex-col min-w-0">
           <div 
             ref={scrollRef}
-            className="flex-1 overflow-y-auto p-6 md:p-10 space-y-8 scroll-smooth"
+            className="flex-1 overflow-y-auto p-4 sm:p-6 md:p-10 space-y-6 sm:space-y-8 scroll-smooth"
           >
             {mode === 'chat' ? (
               messages.length === 0 ? (
                 <EmptyState 
-                  icon={<Sparkles className="h-12 w-12" />} 
+                  icon={<Sparkles className="h-10 w-10 sm:h-12 sm:w-12" />} 
                   title="Universal Chat" 
                   description="Experience the power of any LLM through our unified interface. Start by typing a message below." 
                 />
               ) : (
-                <div className="max-w-4xl mx-auto space-y-8">
+                <div className="max-w-4xl mx-auto space-y-6 sm:space-y-8">
                   {messages.map((m, i) => (
                     <div key={i} className={cn(
-                      "flex gap-6 animate-in fade-in slide-in-from-bottom-4 duration-500",
+                      "flex gap-3 sm:gap-6 animate-in fade-in slide-in-from-bottom-4 duration-500",
                       m.role === 'user' ? "flex-row-reverse" : "flex-row"
                     )}>
                       <div className={cn(
-                        "h-10 w-10 rounded-2xl shrink-0 flex items-center justify-center border shadow-sm",
+                        "h-8 w-8 sm:h-10 sm:w-10 rounded-xl sm:rounded-2xl shrink-0 flex items-center justify-center border shadow-sm",
                         m.role === 'user' 
                           ? "bg-primary border-primary/20 text-white shadow-primary/20" 
                           : "bg-white dark:bg-slate-900 border-border"
                       )}>
-                        {m.role === 'user' ? <User className="h-5 w-5" /> : <Bot className="h-5 w-5" />}
+                        {m.role === 'user' ? <User className="h-4 w-4 sm:h-5 sm:w-5" /> : <Bot className="h-4 w-4 sm:h-5 sm:w-5" />}
                       </div>
                       <div className={cn(
-                        "flex-1 p-6 rounded-[2rem] text-sm leading-relaxed border transition-all duration-300",
+                        "flex-1 p-4 sm:p-6 rounded-2xl sm:rounded-[2rem] text-xs sm:text-sm leading-relaxed border transition-all duration-300",
                         m.role === 'user' 
                           ? "bg-slate-900 dark:bg-white text-white dark:text-slate-900 border-transparent shadow-xl" 
                           : "bg-white dark:bg-slate-900 border-border shadow-sm hover:border-primary/20"
                       )}>
-                        <div className="prose dark:prose-invert max-w-none">
+                        <div className="prose dark:prose-invert max-w-none prose-sm sm:prose-base">
                           {m.content}
                         </div>
                       </div>
@@ -331,62 +336,62 @@ export default function PlaygroundPage() {
               )
             ) : mode === 'image' ? (
               imageUrl ? (
-                <div className="flex flex-col items-center justify-center h-full p-4">
-                  <div className="relative group rounded-[2.5rem] overflow-hidden shadow-2xl border-8 border-white dark:border-slate-900 animate-in zoom-in-95 duration-700 max-w-4xl w-full">
+                <div className="flex flex-col items-center justify-center h-full p-2 sm:p-4">
+                  <div className="relative group rounded-2xl sm:rounded-[2.5rem] overflow-hidden shadow-2xl border-4 sm:border-8 border-white dark:border-slate-900 animate-in zoom-in-95 duration-700 max-w-4xl w-full">
                     <img src={imageUrl} alt="Generated" className="w-full h-auto object-contain" />
-                    <div className="absolute inset-0 bg-slate-950/60 opacity-0 group-hover:opacity-100 transition-all duration-500 flex items-center justify-center gap-6 backdrop-blur-sm">
+                    <div className="absolute inset-0 bg-slate-950/60 opacity-0 group-hover:opacity-100 transition-all duration-500 flex items-center justify-center gap-4 sm:gap-6 backdrop-blur-sm">
                       <a 
                         href={imageUrl} 
                         download="generated-image.png" 
-                        className="h-16 w-16 bg-white rounded-full text-slate-950 flex items-center justify-center hover:scale-110 active:scale-95 transition-all shadow-2xl"
+                        className="h-12 w-12 sm:h-16 sm:w-16 bg-white rounded-full text-slate-950 flex items-center justify-center hover:scale-110 active:scale-95 transition-all shadow-2xl"
                       >
-                        <Download className="h-8 w-8" />
+                        <Download className="h-6 w-6 sm:h-8 sm:w-8" />
                       </a>
                     </div>
                   </div>
                 </div>
               ) : (
                 <EmptyState 
-                  icon={<ImageIcon className="h-12 w-12" />} 
+                  icon={<ImageIcon className="h-10 w-10 sm:h-12 sm:w-12" />} 
                   title="Creative Studio" 
-                  description="Transform text into breathtaking visuals using state-of-the-art diffusion models." 
+                  description="Transform text into breathtaking visuals using diffusion models." 
                 />
               )
             ) : (
               videoUrl ? (
-                <div className="flex flex-col items-center justify-center h-full p-4">
-                  <div className="relative group rounded-[2.5rem] overflow-hidden shadow-2xl border-8 border-white dark:border-slate-900 animate-in zoom-in-95 duration-700 max-w-4xl w-full">
+                <div className="flex flex-col items-center justify-center h-full p-2 sm:p-4">
+                  <div className="relative group rounded-2xl sm:rounded-[2.5rem] overflow-hidden shadow-2xl border-4 sm:border-8 border-white dark:border-slate-900 animate-in zoom-in-95 duration-700 max-w-4xl w-full">
                     <video src={videoUrl} controls className="w-full h-auto" />
-                    <div className="absolute top-8 right-8 opacity-0 group-hover:opacity-100 transition-all duration-500">
+                    <div className="absolute top-4 sm:top-8 right-4 sm:right-8 opacity-0 group-hover:opacity-100 transition-all duration-500">
                       <a 
                         href={videoUrl} 
                         download="generated-video.mp4" 
-                        className="h-12 w-12 bg-white rounded-full text-slate-950 flex items-center justify-center hover:scale-110 active:scale-95 transition-all shadow-2xl"
+                        className="h-10 w-10 sm:h-12 sm:w-12 bg-white rounded-full text-slate-950 flex items-center justify-center hover:scale-110 active:scale-95 transition-all shadow-2xl"
                       >
-                        <Download className="h-6 w-6" />
+                        <Download className="h-5 w-5 sm:h-6 sm:w-6" />
                       </a>
                     </div>
                   </div>
                 </div>
               ) : (
                 <EmptyState 
-                  icon={<Video className="h-12 w-12" />} 
+                  icon={<Video className="h-10 w-10 sm:h-12 sm:w-12" />} 
                   title="Motion Forge" 
-                  description="Bring your ideas to life with cinematic AI video generation. Describe your scene below." 
+                  description="Bring your ideas to life with cinematic AI video generation." 
                 />
               )
             )}
             
             {loading && (
-              <div className="max-w-4xl mx-auto flex gap-6 animate-pulse">
-                <div className="h-10 w-10 rounded-2xl bg-slate-200 dark:bg-slate-800 shrink-0 flex items-center justify-center border border-border">
-                  <Bot className="h-5 w-5 text-slate-400" />
+              <div className="max-w-4xl mx-auto flex gap-3 sm:gap-6 animate-pulse">
+                <div className="h-8 w-8 sm:h-10 sm:w-10 rounded-xl sm:rounded-2xl bg-slate-200 dark:bg-slate-800 shrink-0 flex items-center justify-center border border-border">
+                  <Bot className="h-4 w-4 sm:h-5 sm:w-5 text-slate-400" />
                 </div>
-                <div className="flex-1 p-6 rounded-[2rem] bg-white/50 dark:bg-slate-900/50 border border-border/50 text-sm flex items-center gap-3">
+                <div className="flex-1 p-4 sm:p-6 rounded-2xl sm:rounded-[2rem] bg-white/50 dark:bg-slate-900/50 border border-border/50 text-xs sm:text-sm flex items-center gap-2 sm:gap-3">
                   <div className="flex gap-1">
-                    <div className="h-1.5 w-1.5 rounded-full bg-primary animate-bounce [animation-delay:-0.3s]" />
-                    <div className="h-1.5 w-1.5 rounded-full bg-primary animate-bounce [animation-delay:-0.15s]" />
-                    <div className="h-1.5 w-1.5 rounded-full bg-primary animate-bounce" />
+                    <div className="h-1 w-1 sm:h-1.5 sm:w-1.5 rounded-full bg-primary animate-bounce [animation-delay:-0.3s]" />
+                    <div className="h-1 w-1 sm:h-1.5 sm:w-1.5 rounded-full bg-primary animate-bounce [animation-delay:-0.15s]" />
+                    <div className="h-1 w-1 sm:h-1.5 sm:w-1.5 rounded-full bg-primary animate-bounce" />
                   </div>
                   <span className="text-slate-500 font-medium">CloudGPT is thinking...</span>
                 </div>
@@ -394,19 +399,19 @@ export default function PlaygroundPage() {
             )}
             
             {error && (
-              <div className="max-w-4xl mx-auto p-4 rounded-2xl bg-red-50 dark:bg-red-500/10 border border-red-200 dark:border-red-500/20 text-red-600 dark:text-red-400 text-sm flex items-center justify-between gap-3 animate-in slide-in-from-top-2">
-                <div className="flex items-center gap-3">
-                  <div className="h-8 w-8 rounded-lg bg-red-100 dark:bg-red-500/20 flex items-center justify-center shrink-0">
-                    <Info className="h-4 w-4" />
+              <div className="max-w-4xl mx-auto p-3 sm:p-4 rounded-xl sm:rounded-2xl bg-red-50 dark:bg-red-500/10 border border-red-200 dark:border-red-500/20 text-red-600 dark:text-red-400 text-xs sm:text-sm flex items-center justify-between gap-3 animate-in slide-in-from-top-2">
+                <div className="flex items-center gap-2 sm:gap-3">
+                  <div className="h-7 w-7 sm:h-8 sm:w-8 rounded-lg bg-red-100 dark:bg-red-500/20 flex items-center justify-center shrink-0">
+                    <Info className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
                   </div>
                   <span className="font-bold">{error}</span>
                 </div>
                 {error.includes('Pro members') && (
                   <Link 
                     href="/pricing"
-                    className="px-4 py-2 bg-red-600 hover:bg-red-700 text-white rounded-xl text-xs font-bold transition-colors shrink-0"
+                    className="px-3 sm:px-4 py-1.5 sm:py-2 bg-red-600 hover:bg-red-700 text-white rounded-lg sm:rounded-xl text-[10px] sm:text-xs font-bold transition-colors shrink-0"
                   >
-                    Upgrade Now
+                    Upgrade
                   </Link>
                 )}
               </div>
@@ -414,26 +419,26 @@ export default function PlaygroundPage() {
           </div>
 
           {/* Input Area */}
-          <div className="p-6 md:p-10 bg-gradient-to-t from-white dark:from-slate-950 via-white/80 dark:via-slate-950/80 to-transparent">
+          <div className="p-4 sm:p-6 md:p-10 bg-gradient-to-t from-white dark:from-slate-950 via-white/80 dark:via-slate-950/80 to-transparent">
             <div className="max-w-4xl mx-auto relative group">
               {countdown && (
-                <div className="mb-4 p-4 rounded-2xl bg-amber-50 dark:bg-amber-500/10 border border-amber-200 dark:border-amber-500/20 flex items-center justify-between animate-in slide-in-from-bottom-2">
-                  <div className="flex items-center gap-3">
-                    <Clock className="h-5 w-5 text-amber-500 animate-pulse" />
+                <div className="mb-3 sm:mb-4 p-3 sm:p-4 rounded-xl sm:rounded-2xl bg-amber-50 dark:bg-amber-500/10 border border-amber-200 dark:border-amber-500/20 flex items-center justify-between animate-in slide-in-from-bottom-2">
+                  <div className="flex items-center gap-2 sm:gap-3">
+                    <Clock className="h-4 w-4 sm:h-5 sm:w-5 text-amber-500 animate-pulse" />
                     <div>
-                      <p className="text-sm font-bold text-amber-900 dark:text-amber-100">Model Maintenance</p>
-                      <p className="text-xs text-amber-700 dark:text-amber-400">This model is temporarily unavailable for scheduled maintenance.</p>
+                      <p className="text-xs sm:text-sm font-bold text-amber-900 dark:text-amber-100">Model Maintenance</p>
+                      <p className="text-[10px] sm:text-xs text-amber-700 dark:text-amber-400">Temporarily unavailable.</p>
                     </div>
                   </div>
                   <div className="text-right">
-                    <p className="text-xs font-black text-amber-500 uppercase tracking-widest">Back In</p>
-                    <p className="text-sm font-mono font-black text-amber-600 dark:text-amber-400">
+                    <p className="text-[10px] font-black text-amber-500 uppercase tracking-widest">Back In</p>
+                    <p className="text-xs sm:text-sm font-mono font-black text-amber-600 dark:text-amber-400">
                       {countdown.hours}h {countdown.minutes}m {countdown.seconds}s
                     </p>
                   </div>
                 </div>
               )}
-              <div className="absolute -inset-1 bg-gradient-to-r from-primary/20 via-blue-500/20 to-emerald-500/20 rounded-[2.5rem] blur opacity-0 group-focus-within:opacity-100 transition-opacity duration-500" />
+              <div className="absolute -inset-1 bg-gradient-to-r from-primary/20 via-blue-500/20 to-emerald-500/20 rounded-2xl sm:rounded-[2.5rem] blur opacity-0 group-focus-within:opacity-100 transition-opacity duration-500" />
               <div className="relative">
                 <textarea
                   value={input}
@@ -444,26 +449,26 @@ export default function PlaygroundPage() {
                       handleSubmit();
                     }
                   }}
-                  placeholder={mode === 'chat' ? "Ask anything... (Shift + Enter for new line)" : "Describe your creation in detail..."}
-                  className="w-full pl-6 pr-20 py-6 rounded-[2rem] border-2 border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 focus:ring-0 focus:border-primary transition-all outline-none resize-none min-h-[80px] max-h-[300px] text-base font-medium shadow-xl shadow-slate-200/50 dark:shadow-none"
+                  placeholder={mode === 'chat' ? "Ask anything..." : "Describe your creation..."}
+                  className="w-full pl-5 sm:pl-6 pr-16 sm:pr-20 py-4 sm:py-6 rounded-2xl sm:rounded-[2rem] border-2 border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 focus:ring-0 focus:border-primary transition-all outline-none resize-none min-h-[60px] sm:min-h-[80px] max-h-[200px] sm:max-h-[300px] text-base font-medium shadow-xl shadow-slate-200/50 dark:shadow-none"
                   rows={1}
                 />
                 <button
                   onClick={handleSubmit}
                   disabled={!input.trim() || loading}
-                  className="absolute right-3 top-3 bottom-3 w-14 rounded-2xl bg-slate-900 dark:bg-white text-white dark:text-slate-900 flex items-center justify-center disabled:opacity-30 hover:scale-105 active:scale-95 transition-all shadow-lg z-10"
+                  className="absolute right-2 sm:right-3 top-2 sm:top-3 bottom-2 sm:top-3 h-auto sm:bottom-3 w-12 sm:w-14 rounded-xl sm:rounded-2xl bg-slate-900 dark:bg-white text-white dark:text-slate-900 flex items-center justify-center disabled:opacity-30 hover:scale-105 active:scale-95 transition-all shadow-lg z-10"
                 >
-                  {loading ? <Loader2 className="h-6 w-6 animate-spin" /> : <Send className="h-6 w-6" />}
+                  {loading ? <Loader2 className="h-5 w-5 sm:h-6 sm:w-6 animate-spin" /> : <Send className="h-5 w-5 sm:h-6 sm:w-6" />}
                 </button>
               </div>
             </div>
-            <div className="flex items-center justify-center gap-6 mt-6">
-              <div className="flex items-center gap-2">
-                <div className="h-2 w-2 rounded-full bg-emerald-500 animate-pulse" />
-                <span className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em]">API Online</span>
+            <div className="flex items-center justify-center gap-4 sm:gap-6 mt-4 sm:mt-6">
+              <div className="flex items-center gap-1.5 sm:gap-2">
+                <div className="h-1.5 w-1.5 sm:h-2 sm:w-2 rounded-full bg-emerald-500 animate-pulse" />
+                <span className="text-[9px] sm:text-[10px] font-black text-slate-400 uppercase tracking-[0.2em]">API Online</span>
               </div>
-              <div className="h-1 w-1 rounded-full bg-slate-300 dark:bg-slate-700" />
-              <p className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em]">
+              <div className="h-0.5 w-0.5 sm:h-1 sm:w-1 rounded-full bg-slate-300 dark:bg-slate-700" />
+              <p className="text-[9px] sm:text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] truncate max-w-[150px] sm:max-w-none">
                 {currentModels.find(m => m.id === selectedModel)?.name}
               </p>
             </div>
@@ -551,19 +556,22 @@ function MetricCard({ label, value, sub }: { label: string, value: string, sub: 
   );
 }
 
-function ModeButton({ active, onClick, icon, label }: { active: boolean, onClick: () => void, icon: React.ReactNode, label: string }) {
+function ModeButton({ active, onClick, icon, label }: { active: boolean; onClick: () => void; icon: React.ReactNode; label: string }) {
   return (
     <button
       onClick={onClick}
       className={cn(
-        "flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-bold transition-all duration-300",
+        "flex items-center gap-2 px-3 sm:px-4 py-2 rounded-xl text-xs sm:text-sm font-bold transition-all duration-300",
         active 
-          ? "bg-white dark:bg-slate-800 text-slate-900 dark:text-white shadow-lg shadow-slate-200/50 dark:shadow-none scale-105" 
-          : "text-slate-500 hover:text-slate-900 dark:hover:text-slate-200 hover:bg-white/50 dark:hover:bg-slate-800/50"
+          ? "bg-white dark:bg-slate-800 text-primary shadow-sm border border-border/50" 
+          : "text-slate-500 hover:text-slate-900 dark:hover:text-slate-100"
       )}
     >
       {icon}
-      <span className="hidden sm:inline">{label}</span>
+      <span className={cn(
+        "transition-all duration-300",
+        active ? "inline" : "hidden sm:inline"
+      )}>{label}</span>
     </button>
   );
 }

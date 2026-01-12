@@ -1,13 +1,14 @@
-import { currentUser } from '@clerk/nextjs/server';
+import { getLogtoContext } from '@logto/next/server-actions';
+import { logtoConfig } from '@/lib/logto';
 import { Shield, Users, CreditCard, Activity, Search, AlertCircle, Check, X, ArrowUpRight, Crown, Package } from 'lucide-react';
 import { getAllUsers, promoteUser, assignPlan } from '@/lib/admin-actions';
 import { supabaseAdmin } from '@/lib/supabase';
 import { cn } from '@/lib/utils';
 
 export default async function AdminPage() {
-  const user = await currentUser();
+  const { isAuthenticated, claims } = await getLogtoContext(logtoConfig);
 
-  if (!user) {
+  if (!isAuthenticated || !claims) {
     return (
       <div className="container mx-auto px-4 py-24 flex flex-col items-center justify-center min-h-[60vh]">
         <div className="p-4 rounded-full bg-red-100 dark:bg-red-900/30 mb-6">
@@ -30,7 +31,7 @@ export default async function AdminPage() {
   const { data: profile, error } = await supabaseAdmin
     .from('profiles')
     .select('role')
-    .eq('id', user.id)
+    .eq('id', claims.sub)
     .single();
 
   const isAdmin = !error && profile?.role === 'admin';
@@ -43,7 +44,7 @@ export default async function AdminPage() {
         </div>
         <h1 className="text-3xl font-bold mb-4">Access Denied</h1>
         <p className="text-slate-600 dark:text-slate-400 text-center max-w-md">
-          This area is restricted to administrators only. Your account ({user.emailAddresses[0].emailAddress || 'Unknown user'}) does not have permission to view this page.
+          This area is restricted to administrators only. Your account ({claims.email || 'Unknown user'}) does not have permission to view this page.
         </p>
         <a 
           href="/"
@@ -122,12 +123,19 @@ export default async function AdminPage() {
                 <tr key={userProfile.id} className="hover:bg-slate-50/50 dark:hover:bg-slate-800/30 transition-colors">
                   <td className="px-6 py-4">
                     <div className="flex items-center gap-3">
-                      <div className="h-8 w-8 rounded-full bg-slate-200 dark:bg-slate-700 flex items-center justify-center text-xs font-bold">
-                        {userProfile.email?.[0].toUpperCase() || '?'}
+                      <div className="h-8 w-8 rounded-full bg-slate-200 dark:bg-slate-700 flex items-center justify-center text-xs font-bold overflow-hidden">
+                        {userProfile.avatar ? (
+                          <img src={userProfile.avatar} alt="" className="h-full w-full object-cover" />
+                        ) : (
+                          (userProfile.name?.[0] || userProfile.email?.[0] || '?').toUpperCase()
+                        )}
                       </div>
                       <div className="flex flex-col">
-                        <span className="text-sm font-medium">{userProfile.email}</span>
-                        <span className="text-xs text-slate-500 font-mono">{userProfile.id.substring(0, 8)}...</span>
+                        <span className="text-sm font-medium">{userProfile.name || userProfile.username || userProfile.email}</span>
+                        <div className="flex items-center gap-2">
+                          <span className="text-xs text-slate-500">{userProfile.email}</span>
+                          <span className="text-[10px] text-slate-400 font-mono bg-slate-100 dark:bg-slate-800 px-1 rounded">{userProfile.id.substring(0, 8)}</span>
+                        </div>
                       </div>
                     </div>
                   </td>

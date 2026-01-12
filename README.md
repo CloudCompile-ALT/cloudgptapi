@@ -217,7 +217,7 @@ curl -X POST https://your-app.vercel.app/v1/chat/completions \
 ## 🛠️ Configuration
 
 See [KEYS_SETUP.md](./KEYS_SETUP.md) for detailed instructions on setting up:
-- Clerk authentication
+- Logto authentication
 - Pollinations API key
 - Other environment variables
 
@@ -240,14 +240,14 @@ cloudgpt/
 │   │   └── models/route.ts    # List chat models
 │   ├── dashboard/
 │   │   └── page.tsx           # Dashboard page
-│   ├── layout.tsx             # Root layout with Clerk
+│   ├── layout.tsx             # Root layout with Logto
 │   ├── page.tsx               # Home page
 │   └── globals.css            # Global styles
 ├── lib/
 │   ├── api-keys.ts            # API key utilities
 │   └── providers.ts           # AI provider configs
 ├── docs/                      # Frontend for GitHub Pages
-├── middleware.ts              # Clerk middleware
+├── middleware.ts              # Logto middleware
 ├── KEYS_SETUP.md              # Keys setup guide
 └── README.md                  # This file
 ```
@@ -293,6 +293,6 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 ## 🙏 Acknowledgments
 
 - [Pollinations AI](https://pollinations.ai) - AI generation API
-- [Clerk](https://clerk.com) - Authentication
+- [Logto](https://logto.io) - Authentication
 - [Vercel](https://vercel.com) - Hosting platform
 - [Next.js](https://nextjs.org) - React framework

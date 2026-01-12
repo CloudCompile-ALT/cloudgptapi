@@ -587,6 +587,20 @@ export function createChatTransformStream(
 
       // ALWAYS ensure the stream ends with [DONE] for Chub JAI/SillyTavern compatibility
       if (!finalOutput.includes('[DONE]')) {
+        // --- EMPTY CONTENT FALLBACK FOR STREAMING ---
+        // If we've reached the end of the stream and have no content, send a fallback message
+        if (!fullContent && !fullToolCalls.length && modelId?.includes('gemini')) {
+          console.error('[STREAM FLUSH] Empty content detected for Gemini stream. Sending fallback.');
+          const fallback = {
+            choices: [{
+              index: 0,
+              delta: { content: "I apologize, but I encountered an issue generating a response for this request. This can sometimes happen with complex prompts or sensitive topics. Please try rephrasing your message or switching to a different model." },
+              finish_reason: "content_filter"
+            }]
+          };
+          finalOutput = `data: ${JSON.stringify(fallback)}\n\n` + finalOutput;
+        }
+        
         finalOutput += 'data: [DONE]\n\n';
       }
 

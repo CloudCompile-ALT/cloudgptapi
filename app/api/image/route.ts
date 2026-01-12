@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { auth } from '@clerk/nextjs/server';
+import { getLogtoContext } from '@logto/next/server-actions';
+import { logtoConfig } from '@/lib/logto';
 import { extractApiKey, validateApiKey, trackUsage, checkRateLimit, getRateLimitInfo, checkDailyLimit, getDailyLimitInfo, ApiKey, applyPlanOverride, applyPeakHoursLimit } from '@/lib/api-keys';
 import { IMAGE_MODELS, PROVIDER_URLS, ImageModel, PREMIUM_MODELS } from '@/lib/providers';
 import { getPollinationsApiKey, safeResponseJson, safeJsonParse, hasProAccess } from '@/lib/utils';
@@ -160,7 +161,8 @@ async function generateStableHordeImage(
   effectiveKey: string,
   apiKeyInfo: ApiKey | null,
   limit: number,
-  dailyLimit: number
+  dailyLimit: number,
+  isSystemRequest: boolean
 ) {
   // '0000000000' is Stable Horde's official anonymous API key for rate-limited access
   const hordeApiKey = process.env.STABLEHORDE_API_KEY || process.env.STABLE_HORDE_API_KEY || '0000000000';
@@ -259,7 +261,7 @@ async function generateStableHordeImage(
           const imageUrl = statusData.generations[0].img;
           
           // Track usage
-          if (apiKeyInfo) {
+          if (apiKeyInfo && !isSystemRequest) {
             await trackUsage(apiKeyInfo.id, apiKeyInfo.userId, model.id, 'image');
           }
           
@@ -323,7 +325,15 @@ async function generateStableHordeImage(
 export async function POST(request: NextRequest) {
   try {
     // Get user from session
-    const { userId: sessionUserId } = await auth();
+    let sessionUserId = null;
+    try {
+      const { isAuthenticated, claims } = await getLogtoContext(logtoConfig);
+      if (isAuthenticated && claims) {
+        sessionUserId = claims.sub;
+      }
+    } catch (authError) {
+      // Ignore auth error for API keys
+    }
 
     // Extract and validate API key
     const rawApiKey = extractApiKey(request.headers);
@@ -388,8 +398,11 @@ export async function POST(request: NextRequest) {
     limit = applyPeakHoursLimit(limit);
     dailyLimit = applyPeakHoursLimit(dailyLimit);
     
+    // VPS Bypass: Don't count requests from our own VPS against RPD
+    const isSystemRequest = clientIp === '157.151.169.121';
+    
     // Check Daily Limit First
-    if (!await checkDailyLimit(effectiveKey, dailyLimit, apiKeyInfo?.id)) {
+    if (!isSystemRequest && !await checkDailyLimit(effectiveKey, dailyLimit, apiKeyInfo?.id)) {
       const dailyInfo = await getDailyLimitInfo(effectiveKey, dailyLimit, apiKeyInfo?.id);
       return NextResponse.json(
         { 
@@ -410,7 +423,7 @@ export async function POST(request: NextRequest) {
       );
     }
     
-    if (!await checkRateLimit(effectiveKey, limit, 'image')) {
+    if (!isSystemRequest && !await checkRateLimit(effectiveKey, limit, 'image')) {
       const rateLimitInfo = await getRateLimitInfo(effectiveKey, limit, 'image');
       return NextResponse.json(
         { error: 'Rate limit exceeded', resetAt: rateLimitInfo.resetAt },
@@ -468,7 +481,7 @@ export async function POST(request: NextRequest) {
     // Handle AppyPie models
     if (model.provider === 'appypie') {
       const response = await generateAppyPieImage(body, model, apiKeyInfo?.userId || sessionUserId);
-      if (apiKeyInfo) {
+      if (apiKeyInfo && !isSystemRequest) {
         await trackUsage(apiKeyInfo.id, apiKeyInfo.userId, modelId, 'image');
       }
       return response;
@@ -483,7 +496,8 @@ export async function POST(request: NextRequest) {
         effectiveKey, 
         apiKeyInfo,
         limit,
-        dailyLimit
+        dailyLimit,
+        isSystemRequest
       );
       return response;
     }
@@ -585,7 +599,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Track usage in background if authenticated
-    if (apiKeyInfo) {
+    if (apiKeyInfo && !isSystemRequest) {
       await trackUsage(apiKeyInfo.id, apiKeyInfo.userId, modelId, 'image', body.prompt);
     }
 
