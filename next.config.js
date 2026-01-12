@@ -15,6 +15,14 @@ const nextConfig = {
     // !! WARN !!
     ignoreBuildErrors: true,
   },
+  async rewrites() {
+    return [
+      {
+        source: '/oidc/:path*',
+        destination: 'https://ethical-incident-barbara-proceedings.trycloudflare.com/oidc/:path*',
+      },
+    ];
+  },
   async headers() {
     const corsHeaders = [
       { key: 'Access-Control-Allow-Credentials', value: 'true' },
