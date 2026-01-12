@@ -21,6 +21,10 @@ const nextConfig = {
         source: '/oidc/:path*',
         destination: 'https://ethical-incident-barbara-proceedings.trycloudflare.com/oidc/:path*',
       },
+      {
+        source: '/.well-known/:path*',
+        destination: 'https://ethical-incident-barbara-proceedings.trycloudflare.com/oidc/.well-known/:path*',
+      },
     ];
   },
   async headers() {
