@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { useLogto } from '@logto/react';
+import { useUser } from '@clerk/nextjs';
 import { Crown, Shield, Zap, ArrowUpCircle } from 'lucide-react';
 import { cn, hasProAccess } from '@/lib/utils';
 import Link from 'next/link';
@@ -10,11 +10,11 @@ import Link from 'next/link';
 let profileCache: { role: string; plan: string; timestamp: number } | null = null;
 
 export function UserStatus() {
-  const { isAuthenticated } = useLogto();
+  const { isSignedIn } = useUser();
   const [profile, setProfile] = useState<{ role: string; plan: string } | null>(profileCache);
 
   useEffect(() => {
-    if (isAuthenticated) {
+    if (isSignedIn) {
       const now = Date.now();
       // Use cache if it's less than 5 minutes old
       if (profileCache && now - profileCache.timestamp < 1000 * 60 * 5) {
@@ -33,9 +33,9 @@ export function UserStatus() {
         })
         .catch(err => console.error('Failed to fetch user profile:', err));
     }
-  }, [isAuthenticated]);
+  }, [isSignedIn]);
 
-  if (!isAuthenticated || !profile) return null;
+  if (!isSignedIn || !profile) return null;
   
   const isPro = hasProAccess(profile.plan);
   const isAdmin = profile.role === 'admin' || profile.plan === 'admin';

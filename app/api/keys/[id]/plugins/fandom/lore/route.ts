@@ -1,6 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { getLogtoContext } from '@logto/next/server-actions';
-import { logtoConfig } from '@/lib/logto';
+import { auth } from '@clerk/nextjs/server';
 import { supabaseAdmin } from '@/lib/supabase';
 
 const REMOTE_PLUGIN_URL = 'https://king-dried-favors-latter.trycloudflare.com';
@@ -22,11 +21,10 @@ export async function GET(
   req: NextRequest,
   { params }: { params: { id: string } }
 ) {
-  const { id: keyId } = params;
+  const { id: keyId } = await params;
   
   try {
-    const { isAuthenticated, claims } = await getLogtoContext(logtoConfig);
-    const userId = (isAuthenticated && claims) ? claims.sub : null;
+    const { userId } = await auth();
     if (!await verifyOwnership(userId, keyId)) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
@@ -52,11 +50,10 @@ export async function POST(
   req: NextRequest,
   { params }: { params: { id: string } }
 ) {
-  const { id: keyId } = params;
+  const { id: keyId } = await params;
   
   try {
-    const { isAuthenticated, claims } = await getLogtoContext(logtoConfig);
-    const userId = (isAuthenticated && claims) ? claims.sub : null;
+    const { userId } = await auth();
     if (!await verifyOwnership(userId, keyId)) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
@@ -85,7 +82,7 @@ export async function DELETE(
   req: NextRequest,
   { params }: { params: { id: string } }
 ) {
-  const { id: keyId } = params;
+  const { id: keyId } = await params;
   const { searchParams } = new URL(req.url);
   const snippetId = searchParams.get('snippetId');
 
@@ -94,8 +91,7 @@ export async function DELETE(
   }
   
   try {
-    const { isAuthenticated, claims } = await getLogtoContext(logtoConfig);
-    const userId = (isAuthenticated && claims) ? claims.sub : null;
+    const { userId } = await auth();
     if (!await verifyOwnership(userId, keyId)) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }

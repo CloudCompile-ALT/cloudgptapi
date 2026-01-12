@@ -1,6 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { getLogtoContext } from '@logto/next/server-actions';
-import { logtoConfig } from '@/lib/logto';
+import { auth } from '@clerk/nextjs/server';
 import { extractApiKey, validateApiKey, trackUsage, checkRateLimit, getRateLimitInfo, applyPeakHoursLimit } from '@/lib/api-keys';
 
 export const runtime = 'nodejs';
@@ -15,9 +14,9 @@ export async function POST(request: NextRequest) {
     // Get user from session
     let sessionUserId = null;
     try {
-      const { isAuthenticated, claims } = await getLogtoContext(logtoConfig);
-      if (isAuthenticated && claims) {
-        sessionUserId = claims.sub;
+      const { userId } = await auth();
+      if (userId) {
+        sessionUserId = userId;
       }
     } catch (authError) {
       // Ignore auth error for API keys

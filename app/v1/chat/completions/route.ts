@@ -1,6 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { getLogtoContext } from '@logto/next/server-actions';
-import { logtoConfig } from '@/lib/logto';
+import { auth } from '@clerk/nextjs/server';
 import { extractApiKey, validateApiKey, trackUsage, checkRateLimit, getRateLimitInfo, checkDailyLimit, getDailyLimitInfo, ApiKey, applyPlanOverride, applyPeakHoursLimit } from '@/lib/api-keys';
 import { runFandomPlugin } from '@/lib/plugins';
 import { CHAT_MODELS, PREMIUM_MODELS } from '@/lib/providers';
@@ -260,13 +259,13 @@ export async function POST(request: NextRequest) {
     // Get user from session (for website users)
     let sessionUserId = null;
     try {
-      const { isAuthenticated, claims } = await getLogtoContext(logtoConfig);
-      if (isAuthenticated && claims) {
-        sessionUserId = claims.sub;
+      const { userId } = await auth();
+      if (userId) {
+        sessionUserId = userId;
         console.log(`[${requestId}] Session User ID: ${sessionUserId}`);
       }
     } catch (authError) {
-      console.log(`[${requestId}] Logto context skipped or failed (expected for API keys)`);
+      console.log(`[${requestId}] Auth context skipped or failed (expected for API keys)`);
     }
 
     // Extract and validate API key (for API users)

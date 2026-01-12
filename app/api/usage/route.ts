@@ -1,6 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { getLogtoContext } from '@logto/next/server-actions';
-import { logtoConfig } from '@/lib/logto';
+import { auth } from '@clerk/nextjs/server';
 import { supabaseAdmin } from '@/lib/supabase';
 import { getDailyLimitInfo, applyPlanOverride, applyPeakHoursLimit, isPeakHours } from '@/lib/api-keys';
 import { getCorsHeaders } from '@/lib/utils';
@@ -9,13 +8,11 @@ export const runtime = 'nodejs';
 
 export async function GET(request: NextRequest) {
   try {
-    const { isAuthenticated, claims } = await getLogtoContext(logtoConfig);
+    const { userId } = await auth();
     
-    if (!isAuthenticated || !claims) {
+    if (!userId) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401, headers: getCorsHeaders() });
     }
-
-    const userId = claims.sub;
 
     // Get user profile to determine plan
     const { data: profile, error: profileError } = await supabaseAdmin
