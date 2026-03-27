@@ -992,7 +992,7 @@ export async function POST(request: NextRequest) {
 
     // OpenRouter requires additional headers
     if (model.provider === 'openrouter') {
-      headers['HTTP-Referer'] = process.env.NEXT_PUBLIC_SITE_URL || 'https://your-vetra-domain.vercel.app';
+      headers['HTTP-Referer'] = process.env.NEXT_PUBLIC_SITE_URL || process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000';
       headers['X-Title'] = 'Vetra API';
     }
 

@@ -32,7 +32,7 @@ Get your API key from the [Dashboard](/dashboard) after signing up.
 ## Base URL
 
 ```
-https://your-vetra-domain.vercel.app
+https://vetraai.vercel.app
 ```
 
 ## Rate Limits
@@ -339,7 +339,7 @@ Vetra is Pollinations-only.
 ### JavaScript (fetch)
 
 ```javascript
-const response = await fetch('https://your-vetra-domain.vercel.app/v1/chat/completions', {
+const response = await fetch('https://vetraai.vercel.app/v1/chat/completions', {
   method: 'POST',
   headers: {
     'Authorization': 'Bearer YOUR_API_KEY',

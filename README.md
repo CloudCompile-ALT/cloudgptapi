@@ -148,7 +148,7 @@ The dashboard and API key management require user authentication via Clerk. Sign
 Use your API key in the Authorization header:
 
 ```bash
-curl -X POST https://your-app.vercel.app/v1/chat/completions \
+curl -X POST https://vetraai.vercel.app/v1/chat/completions \
   -H "Authorization: Bearer cgpt_xxxxxxxxxxxxxxxxxxxx" \
   -H "Content-Type: application/json" \
   -d '{"model": "openai", "messages": [{"role": "user", "content": "Hello!"}]}'

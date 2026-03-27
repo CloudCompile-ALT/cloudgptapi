@@ -29,7 +29,7 @@ const sections = [
   {
     title: 'Limitation of Liability',
     content:
-      'Vetra is provided “as is” without warranties of any kind. To the maximum extent permitted by law, CloudCompile is not liable for any indirect, incidental, or consequential damages arising from your use of the service.',
+      'Vetra is provided “as is” without warranties of any kind. To the maximum extent permitted by law, Vetra is not liable for any indirect, incidental, or consequential damages arising from your use of the service.',
   },
   {
     title: 'Changes to These Terms',

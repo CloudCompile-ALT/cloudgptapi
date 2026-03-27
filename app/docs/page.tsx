@@ -183,7 +183,7 @@ export default function DocsPage() {
                       </div>
                       <div className="p-5 sm:p-8">
                         <code className="text-xs sm:text-base text-blue-400 font-mono leading-relaxed block whitespace-pre-wrap">
-                          https://your-vetra-domain.vercel.app/v1
+                          https://vetraai.vercel.app/v1
                         </code>
                       </div>
                     </div>
@@ -246,7 +246,7 @@ export default function DocsPage() {
                   <div className="rounded-xl bg-slate-950 p-6 shadow-2xl border border-slate-800 overflow-x-auto">
                     <pre className="text-sm font-mono text-slate-300">
                       <code>{`// Memory is AUTOMATIC when you provide a x-user-id
-const response = await fetch('https://your-vetra-domain.vercel.app/v1/chat/completions', {
+const response = await fetch('https://vetraai.vercel.app/v1/chat/completions', {
   method: 'POST',
   headers: {
     'Authorization': 'Bearer YOUR_API_KEY',
@@ -334,7 +334,7 @@ const response = await fetch('https://your-vetra-domain.vercel.app/v1/chat/compl
                   <h3 className="text-lg font-bold">Example Usage</h3>
                   <div className="rounded-xl bg-slate-950 p-6 shadow-2xl border border-slate-800 overflow-x-auto">
                     <pre className="text-sm font-mono text-slate-300">
-                      <code>{`curl -X POST https://your-vetra-domain.vercel.app/v1/chat/completions \\
+                      <code>{`curl -X POST https://vetraai.vercel.app/v1/chat/completions \\
   -H "Authorization: Bearer YOUR_API_KEY" \\
   -H "Content-Type: application/json" \\
   -d '{

@@ -88,7 +88,7 @@ export default function AboutPage() {
               <div className="text-center pt-8 sm:pt-12">
                 <h3 className="text-xl sm:text-2xl font-black mb-4 sm:mb-6">Ready to join the revolution?</h3>
                 <Link 
-                  href="https://your-vetra-domain.vercel.app/" 
+                  href="https://vetraai.vercel.app/" 
                   className="inline-flex items-center gap-2 px-6 sm:px-8 py-3 sm:py-4 rounded-xl bg-primary text-white font-bold text-base sm:text-lg shadow-xl shadow-primary/20 hover:bg-primary/90 hover:scale-[1.02] transition-all"
                 >
                   Get Started Now

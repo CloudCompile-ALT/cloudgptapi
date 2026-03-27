@@ -82,7 +82,7 @@ export default function Home() {
                       <div className="space-y-2 flex-1 min-w-0">
                         <div className="h-3 sm:h-4 w-24 sm:w-32 bg-white/10 rounded-full" />
                         <div className="h-auto md:h-20 bg-white/5 rounded-xl sm:rounded-2xl p-3 sm:p-4 font-mono text-[9px] sm:text-[10px] md:text-xs text-white/40 leading-relaxed break-all md:break-normal">
-                          $ curl https://api.vetra.sh/v1/chat/completions \<br />
+                          $ curl https://vetraai.vercel.app/v1/chat/completions \<br />
                           &nbsp;&nbsp;-H "Authorization: Bearer $KEY" \<br />
                           &nbsp;&nbsp;-d '{"{"}"model": "gpt-5-mini"{"}"}'
                         </div>
@@ -398,7 +398,7 @@ console.log(response.content);`}</code>
                 The next generation of AI infrastructure. Built for developers shipping with Pollinations.
               </p>
               <div className="flex flex-wrap items-center gap-3 sm:gap-4">
-                <a href="https://meridianlabsapp.website/" target="_blank" className="text-[10px] sm:text-xs font-black uppercase tracking-widest text-primary hover:opacity-80 transition-all flex items-center gap-1.5">
+                <a href="https://vetraai.vercel.app/" target="_blank" className="text-[10px] sm:text-xs font-black uppercase tracking-widest text-primary hover:opacity-80 transition-all flex items-center gap-1.5">
                   Vetra <ExternalLink className="h-3 w-3" />
                 </a>
                 <span className="hidden sm:inline text-slate-300">|</span>

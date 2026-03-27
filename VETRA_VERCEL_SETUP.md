@@ -19,7 +19,7 @@ This guide assumes you deleted the previous Vercel project, Supabase project, an
    - `CLERK_SECRET_KEY`
 3. In Clerk URL/redirect settings, allow your domains:
    - `http://localhost:3000`
-   - `https://<your-vercel-domain>`
+   - `https://vetraai.vercel.app`
 
 ---
 
@@ -37,7 +37,7 @@ This guide assumes you deleted the previous Vercel project, Supabase project, an
 If you want hosted data for usage/keys:
 
 1. In Supabase, create a new project.
-2. Open SQL Editor and run `/home/runner/work/cloudgptapi/cloudgptapi/SUPABASE_SETUP.sql`.
+2. Open SQL Editor and run `SUPABASE_SETUP.sql` from the repository root.
 3. From Project Settings → API, copy:
    - `SUPABASE_URL`
    - `SUPABASE_ANON_KEY`
@@ -55,7 +55,7 @@ In Vercel → Project → **Settings → Environment Variables**, add at minimum
 - `NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY`
 - `CLERK_SECRET_KEY`
 - `POLLINATIONS_API_KEY`
-- `NEXT_PUBLIC_APP_URL` = `https://<your-vercel-domain>`
+- `NEXT_PUBLIC_APP_URL` = `https://vetraai.vercel.app`
 
 Optional:
 
@@ -83,9 +83,9 @@ Apply to **Production**, **Preview**, and **Development** as needed.
 
 Run these checks:
 
-1. Open `https://<your-vercel-domain>/` and confirm Vetra branding.
-2. Open `https://<your-vercel-domain>/v1` and verify status JSON is returned.
-3. Open `https://<your-vercel-domain>/v1/models` and confirm returned models are Pollinations-only.
+1. Open `https://vetraai.vercel.app/` and confirm Vetra branding.
+2. Open `https://vetraai.vercel.app/v1` and verify status JSON is returned.
+3. Open `https://vetraai.vercel.app/v1/models` and confirm returned models are Pollinations-only.
 4. If Clerk is enabled, test sign-in flow.
 5. If Supabase is enabled, test API key creation/usage tracking in dashboard.
 
@@ -94,7 +94,7 @@ Run these checks:
 ## 8) Quick API smoke test
 
 ```bash
-curl -X POST "https://<your-vercel-domain>/v1/chat/completions" \
+curl -X POST "https://vetraai.vercel.app/v1/chat/completions" \
   -H "Authorization: Bearer cgpt_YOUR_API_KEY" \
   -H "Content-Type: application/json" \
   -d '{
