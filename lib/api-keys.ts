@@ -19,6 +19,11 @@ export interface ApiKey {
     cacheMode: string;
     preferredSources: string[];
   };
+  memoryEnabled?: boolean;
+  loreEnabled?: boolean;
+  loreHarvestEnabled?: boolean;
+  storyweaverEnabled?: boolean;
+  webSearchMode?: 'off' | 'general_web' | 'lore';
 }
 
 // Generate a new API key with the vtai prefix
@@ -123,8 +128,99 @@ export function applyPeakHoursLimit(baseLimit: number): number {
         cacheMode: 'aggressive',
         preferredSources: ['fandom', 'wikipedia']
       }
+      ,
+      memoryEnabled: data.memory_enabled || false,
+      loreEnabled: data.lore_enabled || false,
+      loreHarvestEnabled: data.lore_harvest_enabled || false,
+      storyweaverEnabled: data.storyweaver_enabled || false,
+      webSearchMode: data.web_search_mode || 'off'
     };
   }
+
+/**
+ * Update plugin flags for an API key.
+ */
+export async function updateKeyPlugins(apiKeyId: string, plugins: Partial<{
+  memoryEnabled: boolean;
+  loreEnabled: boolean;
+  loreHarvestEnabled: boolean;
+  storyweaverEnabled: boolean;
+  webSearchMode: string;
+}>): Promise<{ success: boolean; error?: any } > {
+  try {
+    const updateData: any = {};
+    if (typeof plugins.memoryEnabled === 'boolean') updateData.memory_enabled = plugins.memoryEnabled;
+    if (typeof plugins.loreEnabled === 'boolean') updateData.lore_enabled = plugins.loreEnabled;
+    if (typeof plugins.loreHarvestEnabled === 'boolean') updateData.lore_harvest_enabled = plugins.loreHarvestEnabled;
+    if (typeof plugins.storyweaverEnabled === 'boolean') updateData.storyweaver_enabled = plugins.storyweaverEnabled;
+    if (typeof plugins.webSearchMode === 'string') updateData.web_search_mode = plugins.webSearchMode;
+
+    if (Object.keys(updateData).length === 0) return { success: true };
+
+    const { error } = await supabaseAdmin
+      .from('api_keys')
+      .update(updateData)
+      .eq('id', apiKeyId);
+
+    if (error) return { success: false, error };
+    return { success: true };
+  } catch (err) {
+    return { success: false, error: err };
+  }
+}
+
+/**
+ * Retrieve api key context by internal id (used by server-side orchestration).
+ */
+export async function getApiKeyContextById(apiKeyId: string): Promise<ApiKey | null> {
+  try {
+    const { data, error } = await supabaseAdmin
+      .from('api_keys')
+      .select('*')
+      .eq('id', apiKeyId)
+      .maybeSingle();
+
+    if (error || !data) return null;
+
+    const { data: profile } = await supabaseAdmin
+      .from('profiles')
+      .select('plan, email')
+      .eq('id', data.user_id)
+      .maybeSingle();
+
+    let userPlan = profile?.plan || 'free';
+    if (profile?.email) {
+      userPlan = await applyPlanOverride(profile.email, userPlan, profile.email, 'email');
+    }
+
+    return {
+      id: data.id,
+      key: data.key,
+      userId: data.user_id,
+      name: data.name,
+      createdAt: data.created_at,
+      lastUsedAt: data.last_used_at,
+      rateLimit: data.rate_limit || 10,
+      usageCount: data.usage_count || 0,
+      plan: userPlan,
+      fandomPluginEnabled: data.fandom_plugin_enabled || false,
+      fandomSettings: data.fandom_settings || {
+        maxLoreTokens: 800,
+        autoSummarize: true,
+        cacheMode: 'aggressive',
+        preferredSources: ['fandom', 'wikipedia']
+      },
+      memoryEnabled: data.memory_enabled || false,
+      loreEnabled: data.lore_enabled || false,
+      loreHarvestEnabled: data.lore_harvest_enabled || false,
+      storyweaverEnabled: data.storyweaver_enabled || false,
+      webSearchMode: data.web_search_mode || 'off'
+    };
+  } catch (err) {
+    console.error('[getApiKeyContextById] Error:', err);
+    return null;
+  }
+}
 
   // Track usage for an API key
 export async function trackUsage(

@@ -52,6 +52,9 @@ export default function PluginSettingsPage() {
     cacheMode: 'aggressive',
     preferredSources: ['fandom', 'wikipedia']
   });
+  const [memoryEnabled, setMemoryEnabled] = useState(false);
+  const [storyweaverEnabled, setStoryweaverEnabled] = useState(false);
+  const [webSearchMode, setWebSearchMode] = useState<'off' | 'general_web' | 'lore'>('off');
   
   const [testQuery, setTestQuery] = useState('');
   const [testResult, setTestResult] = useState<{entities: string[], lore: string} | null>(null);
@@ -124,14 +127,26 @@ export default function PluginSettingsPage() {
 
   async function fetchSettings() {
     try {
+      // Fetch generic plugin flags from DB
+      try {
+        const resFlags = await fetch(`/api/keys/${id}/plugins`);
+        if (resFlags.ok) {
+          const flags = await resFlags.json();
+          setMemoryEnabled(flags.memoryEnabled || false);
+          setStoryweaverEnabled(flags.storyweaverEnabled || false);
+          setWebSearchMode(flags.webSearchMode || 'off');
+        }
+      } catch (err) {
+        console.warn('Failed to fetch generic plugin flags', err);
+      }
+
+      // Fandom-specific settings (remote service)
       const response = await fetch(`/api/keys/${id}/plugins/fandom`);
       const data = await response.json();
-      
+
       if (response.ok) {
         setEnabled(data.enabled);
-        if (data.settings) {
-          setSettings(data.settings);
-        }
+        if (data.settings) setSettings(data.settings);
       }
     } catch (err) {
       console.error('Failed to fetch plugin settings');
@@ -144,13 +159,23 @@ export default function PluginSettingsPage() {
     setSaving(true);
     setSaveStatus('idle');
     try {
-      const response = await fetch(`/api/keys/${id}/plugins/fandom`, {
+      // Update DB plugin flags first
+      const p1 = fetch(`/api/keys/${id}/plugins`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ memoryEnabled, storyweaverEnabled, webSearchMode }),
+      });
+
+      // Update fandom remote settings in parallel
+      const p2 = fetch(`/api/keys/${id}/plugins/fandom`, {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ enabled, settings }),
       });
 
-      if (response.ok) {
+      const [r1, r2] = await Promise.all([p1, p2]);
+
+      if (r1.ok && r2.ok) {
         setSaveStatus('success');
         setTimeout(() => setSaveStatus('idle'), 3000);
       } else {

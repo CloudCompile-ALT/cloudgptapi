@@ -5,6 +5,9 @@ import { runFandomPlugin } from '@/lib/plugins';
 import { CHAT_MODELS, PREMIUM_MODELS } from '@/lib/providers';
 import { getCorsHeaders, getPollinationsApiKey, getPollinationsApiKeys, getClaudeApiKey, getClaudeApiKeys, getOpenRouterApiKey, getOpenRouterApiKeys, getPoeApiKey, getPoeApiKeys, getLizApiKey, getLizApiKeys, getOpenAIApiKey, getOpenAIApiKeys, safeResponseJson, hasProAccess } from '@/lib/utils';
 import { retrieveMemory, rememberInteraction } from '@/lib/memory';
+import { webSearch, formatSearchContext } from '@/lib/websearch';
+import { detectRPContext, runStoryWeaver } from '@/lib/storyweaver';
+import { assembleCuratedMessages } from '@/lib/context-curation';
 import { supabaseAdmin } from '@/lib/supabase';
 import {
   validateMessages,
@@ -480,84 +483,109 @@ export async function POST(request: NextRequest) {
       }
     }
 
-    // Integrate PolliStack Memory
+    // Integrate plugin pipeline: memory, lore (fandom), websearch, storyweaver
     const lastMessage = body.messages[body.messages.length - 1]?.content || '';
     let memoryContext = '';
-    
+    let webSearchBlock = '';
+    let storyWeaverResult: { personaLock?: string; scenarioAnchor?: string } | null = null;
+
     try {
-      // Only use memory for supported models, if explicitly requested, or if Fandom (Lore Library) plugin is enabled
       const isGeminiLarge = modelId === 'gemini-large';
       const isClaude = modelId.startsWith('claude');
-      const isFandomEnabled = apiKeyInfo?.fandomPluginEnabled || false;
-      
-      if (isGeminiLarge || isClaude || body.use_memory || isFandomEnabled) {
-        memoryContext = await retrieveMemory(lastMessage, userId, characterId);
-        
-        // Build the optimization prompt (concise mode + memory)
-        let optimizationPrompt = '';
-        if (isGeminiLarge || isClaude) {
-          optimizationPrompt += '\n[System Instruction]: Keep responses concise and focused. Limit output to 3-5 paragraphs maximum. Avoid long monologues.';
-        }
-        
-        if (isClaude) {
-          optimizationPrompt += ' Do not repeat the user\'s input or previous messages. Start your response directly.';
-        }
-        
-        if (memoryContext && memoryContext !== 'No prior context found.') {
-          // Double check memory length one last time before injection
-          const safeMemory = memoryContext.length > 2000 ? memoryContext.substring(0, 2000) + '... [Truncated]' : memoryContext;
-          optimizationPrompt += `\n\n[Character Memory Context]:\n${safeMemory}`;
-        }
+      const isLoreEnabled = apiKeyInfo?.loreEnabled || apiKeyInfo?.fandomPluginEnabled || false;
+      const isMemoryEnabled = apiKeyInfo?.memoryEnabled || false;
+      const isStoryWeaverEnabled = apiKeyInfo?.storyweaverEnabled || false;
+      const webSearchMode = apiKeyInfo?.webSearchMode || 'off';
 
-        if (optimizationPrompt) {
-          // Inject context into messages
+      // Basic RP detection for StoryWeaver activation
+      const isRP = detectRPContext(body.messages) || (body.model === 'rp-auto');
+
+      // Run plugins in parallel with short timeouts
+      const promises: Record<string, Promise<any> | null> = {
+        memory: isMemoryEnabled || body.use_memory ? retrieveMemory(lastMessage, userId, characterId) : Promise.resolve(null),
+        lore: isLoreEnabled ? runFandomPlugin(body.messages, apiKeyInfo?.fandomSettings as any, apiKeyInfo?.id, modelId) : Promise.resolve(null),
+        websearch: webSearchMode !== 'off' ? webSearch(lastMessage || body.messages.map((m:any)=>m.content).join(' ').substring(0,200), webSearchMode as any, 5) : Promise.resolve([]),
+        storyweaver: (isStoryWeaverEnabled && isRP) ? runStoryWeaver(body.messages, userId, characterId) : Promise.resolve(null)
+      };
+
+      // Timeout wrapper
+      const wrap = (p: Promise<any>, ms = 2000) => Promise.race([p, new Promise(resolve => setTimeout(() => resolve(null), ms))]);
+
+      const [memRes, loreRes, webRes, storyRes] = await Promise.all([
+        wrap(promises.memory as Promise<any>, isGeminiLarge || isClaude ? 2500 : 1500),
+        wrap(promises.lore as Promise<any>, 2500),
+        wrap(promises.websearch as Promise<any>, 2000),
+        wrap(promises.storyweaver as Promise<any>, 1200),
+      ]);
+
+      if (memRes) {
+        memoryContext = typeof memRes === 'string' ? memRes : (memRes.context || '');
+      }
+
+      if (webRes && Array.isArray(webRes) && webRes.length) {
+        webSearchBlock = formatSearchContext(lastMessage, webRes, webSearchMode as any);
+      }
+
+      if (storyRes) {
+        storyWeaverResult = storyRes as any;
+      }
+
+      // If lore plugin returned updated messages (VPS injected messages), adopt it
+      if (Array.isArray(loreRes) && loreRes.length) {
+        const originalMessages = [...body.messages];
+        body.messages = loreRes;
+        if (body.messages.length > originalMessages.length) {
+          console.log(`[${requestId}] Fandom Knowledge Plugin injected lore from remote VPS.`);
+          // Keep existing adaptive conversion for Gemini models
           const isGemini = modelId.includes('gemini');
-          
           if (isGemini) {
-            console.log(`[${requestId}] ADAPTIVE: Injecting memory/optimization as user context for Gemini.`);
-            // For Gemini, we find the first user message and prepend the context there,
-            // or add it as a separate user message if no user message exists yet.
-            const firstUserIndex = body.messages.findIndex((m: any) => m.role === 'user');
-            if (firstUserIndex !== -1) {
-              body.messages[firstUserIndex].content = `[Context]: ${optimizationPrompt}\n\n${body.messages[firstUserIndex].content}`;
-            } else {
-              body.messages.push({
-                role: 'user',
-                content: `[Context]: ${optimizationPrompt}`
-              });
-            }
-          } else {
-            const systemMessageIndex = body.messages.findIndex((m: any) => m.role === 'system');
-            
-            if (systemMessageIndex !== -1) {
-              // Cap existing system message if it's too long to prevent model freeze
-              const existingContent = body.messages[systemMessageIndex].content;
-              if (existingContent.length > 5000) {
-                body.messages[systemMessageIndex].content = existingContent.substring(0, 5000) + '... [Original system prompt truncated for performance]';
+            body.messages = body.messages.map((msg: any) => {
+              const isNew = !originalMessages.some((orig: any) => orig.role === msg.role && orig.content === msg.content);
+              if (isNew && msg.role === 'system') {
+                let content = msg.content;
+                // Simple token-aware trim
+                if (content.length > 3200) content = content.substring(0, 3200) + '... [Lore truncated]';
+                return { role: 'user', content: `[Knowledge Context]: ${content}\n\nPlease use the above information to inform your response.` };
               }
-              body.messages[systemMessageIndex].content += optimizationPrompt;
-            } else {
-              body.messages.unshift({
-                role: 'system',
-                content: `You are a helpful assistant with per-character persistent memory.${optimizationPrompt}`
-              });
-            }
+              return msg;
+            });
           }
         }
       }
 
-      // --- Remote Fandom Knowledge Plugin ---
-      // The VPS service now handles the check for whether the plugin is enabled
-      // and performs real scraping of fandom/wiki data.
-      console.log(`[${requestId}] Running Remote Fandom Plugin for key: ${apiKeyInfo?.id || 'unknown'}`);
-      const originalMessages = [...body.messages];
-      
-      body.messages = await runFandomPlugin(body.messages, apiKeyInfo?.fandomSettings as any, apiKeyInfo?.id, modelId);
-      
-      // Model-Adaptive Plugin Injection Logic:
-      // If lore was injected, we may need to adjust the message roles for specific models
-      if (body.messages.length > originalMessages.length) {
-        console.log(`[${requestId}] Fandom Knowledge Plugin injected lore from remote VPS.`);
+      // If we have plugin outputs, assemble curated messages with layer ordering
+      const otherSystemMessages: string[] = [];
+      if (webSearchBlock) otherSystemMessages.push(webSearchBlock);
+      // memoryContext is passed separately into assemble
+
+      const instruction = body.messages.find((m: any) => m.role === 'system')?.content || 'You are a helpful assistant.';
+      const recentMessages = body.messages.filter((m: any) => m.role !== 'system');
+
+      const curated = assembleCuratedMessages({
+        instruction,
+        personaLock: storyWeaverResult?.personaLock || undefined,
+        scenarioAnchor: storyWeaverResult?.scenarioAnchor || undefined,
+        memoryContext: memoryContext || undefined,
+        otherSystemMessages,
+        rollingSummary: undefined,
+        recentMessages,
+        maxTokens: effectiveMaxTokens
+      });
+
+      // Replace body.messages with curated version for downstream processing
+      body.messages = curated;
+
+      // If memory was produced and we should remember, schedule an async remember
+      if (memoryContext && userId && lastMessage) {
+        const shouldRemember = apiKeyInfo?.memoryEnabled || apiKeyInfo?.fandomPluginEnabled || body.use_memory;
+        if (shouldRemember) {
+          rememberInteraction(lastMessage, '[[memory included]]', userId, characterId).catch(err => console.error('Failed to remember interaction:', err));
+        }
+      }
+
+    } catch (pluginErr) {
+      console.error('Plugin pipeline failed:', pluginErr);
+    }
         
         const isGemini = modelId.includes('gemini');
         if (isGemini) {
